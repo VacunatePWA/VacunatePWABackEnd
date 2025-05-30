@@ -15,23 +15,126 @@ datasource db {
 }
 
 model User {
-  id String @id @default(uuid()) @db.Uuid
-  role Role @relation(fields: [roleId], references: [id])
-  roleId String
-  name String
+  id             String @id @default(uuid()) @db.Uuid
+  supervisor     User   @relation("UserSupervisor", fields: [supervisorId], references: [id])
+  supervisees    User[] @relation("UserSupervisor")
+  supervisorId   String @db.Uuid
+  state          State  @relation(fields: [stateId], references: [id])
+  stateId        String
+  role           Role   @relation(fields: [roleId], references: [id])
+  roleId         String
+  name           String
   identification String @unique
-  password String 
-  Phone String
+  password       String
+  phone          String
+
+  user  Historic[]
+  userA Appointment[]
 }
 
 model Role {
-  id String @id @default(uuid()) @db.Uuid
-  name String @unique
+  id          String @id @default(uuid()) @db.Uuid
+  name        String @unique
   description String
-  user User[]
+  user        User[]
 }
 
+model State {
+  id       String    @id @default(uuid()) @db.Uuid
+  type     Boolean
+  state    User[]
+  stateC   Child[]
+  stateCli Clinics[]
+}
 
+model Guardian {
+  id             String @id @default(uuid()) @db.Uuid
+  name           String
+  lastName       String
+  identification String
+  email          String
+  phone          Int
+  direction      String
+  relation       String
+}
 
+model Vaccination {
+  id          String @id @default(uuid()) @db.Uuid
+  name        String
+  brand       String
+  maxDose     Int
+  description String
 
+  vaccination Historic[]
+}
 
+model Clinics {
+  id        String @id @default(uuid()) @db.Uuid
+  stateCli  State  @relation(fields: [stateId], references: [id])
+  stateId   String
+  name      String @unique
+  shorName  String
+  direction String
+  phone     Int
+  director  String
+  url       String
+
+  clinics Appointment[]
+}
+
+model Child {
+  id             String   @id @default(uuid()) @db.Uuid
+  stateC         State    @relation(fields: [stateId], references: [id])
+  stateId        String
+  name           String
+  identification String
+  bornday        DateTime
+  age            Int
+  gender         Gender
+  nationality    String
+  direction      String
+  current        Boolean
+
+  child  Historic[]
+  childA Appointment[]
+}
+
+model Historic {
+  id             String      @id @default(uuid()) @db.Uuid
+  user           User        @relation(fields: [userId], references: [id])
+  userId         String
+  child          Child       @relation(fields: [childId], references: [id])
+  childId        String
+  vaccination    Vaccination @relation(fields: [vaccinationId], references: [id])
+  vaccinationId  String
+  name           String      @unique
+  dateApply      DateTime    @default(now())
+  dosesApply     Int
+  ageAtTheMoment Int
+  signature      Bytes
+}
+
+model Appointment {
+  id       String        @id @default(uuid()) @db.Uuid
+  childA   Child         @relation(fields: [childId], references: [id])
+  childId  String
+  userA    User          @relation(fields: [userId], references: [id])
+  userId   String
+  clinics  Clinics       @relation(fields: [clinicId], references: [id])
+  clinicId String
+  date     DateTime
+  state    DateAppoiment
+}
+
+enum DateAppoiment {
+  PENDIENT
+  CANCELED
+  DONE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  TERRENEITOR
+  FURRY
+}

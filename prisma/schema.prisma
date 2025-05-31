@@ -1,140 +1,181 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_PUBLIC_URL")
 }
 
 model User {
-  id             String @id @default(uuid()) @db.Uuid
-  supervisor     User   @relation("UserSupervisor", fields: [supervisorId], references: [id])
-  supervisees    User[] @relation("UserSupervisor")
-  supervisorId   String @db.Uuid
-  state          State  @relation(fields: [stateId], references: [id])
-  stateId        String
-  role           Role   @relation(fields: [roleId], references: [id])
-  roleId         String
+  id             String   @id @default(uuid()) @db.Uuid
+  supervisor     User?    @relation("UserSupervisor", fields: [supervisorId], references: [id])
+  supervisees    User[]   @relation("UserSupervisor")
+  supervisorId   String?  @db.Uuid
+  state          State    @relation(fields: [stateId], references: [id])
+  stateId        String   @db.Uuid
+  role           Role     @relation(fields: [roleId], references: [id])
+  roleId         String   @db.Uuid
   name           String
-  identification String @unique
+  identification String   @unique
   password       String
   phone          String
+  email          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user  Historic[]
-  userA Appointment[]
+  records      Record[]
+  appointments Appointment[]
+
+  @@map("users")
 }
 
 model Role {
   id          String @id @default(uuid()) @db.Uuid
+  state       State  @relation(fields: [stateId], references: [id])
+  stateId     String @db.Uuid
   name        String @unique
   description String
-  user        User[]
+  users       User[]
+
+  @@map("roles")
 }
 
 model State {
-  id       String    @id @default(uuid()) @db.Uuid
-  type     Boolean
-  state    User[]
-  stateC   Child[]
-  stateCli Clinics[]
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  users       User[]
+  children    Child[]
+  clinics     Clinic[]
+  role        Role[]
+
+  @@map("states")
 }
 
 model Guardian {
-  id             String @id @default(uuid()) @db.Uuid
-  name           String
+  id             String   @id @default(uuid()) @db.Uuid
+  firstName      String
   lastName       String
-  identification String
-  email          String
-  phone          Int
-  direction      String
-  relation       String
+  identification String   @unique
+  email          String   @unique
+  phone          String
+  address        String
+  relationship   String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  children Child[]
+
+  @@map("guardians")
 }
 
-model Vaccination {
-  id          String @id @default(uuid()) @db.Uuid
-  name        String
+model Vaccine {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
   brand       String
-  maxDose     Int
+  maxDoses    Int
   description String
+  ageRangeMin Int?
+  ageRangeMax Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  vaccination Historic[]
+  records Record[]
+
+  @@map("vaccines")
 }
 
-model Clinics {
-  id        String @id @default(uuid()) @db.Uuid
-  stateCli  State  @relation(fields: [stateId], references: [id])
-  stateId   String
-  name      String @unique
-  shorName  String
-  direction String
-  phone     Int
+model Clinic {
+  id        String   @id @default(uuid()) @db.Uuid
+  state     State    @relation(fields: [stateId], references: [id])
+  stateId   String   @db.Uuid
+  name      String   @unique
+  shortName String
+  address   String
+  phone     String
   director  String
-  url       String
+  website   String?
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  clinics Appointment[]
+  appointments Appointment[]
+
+  @@map("clinics")
 }
 
 model Child {
   id             String   @id @default(uuid()) @db.Uuid
-  stateC         State    @relation(fields: [stateId], references: [id])
-  stateId        String
-  name           String
-  identification String
-  bornday        DateTime
-  age            Int
+  state          State    @relation(fields: [stateId], references: [id])
+  stateId        String   @db.Uuid
+  guardian       Guardian @relation(fields: [guardianId], references: [id])
+  guardianId     String   @db.Uuid
+  firstName      String
+  lastName       String
+  identification String   @unique
+  birthDate      DateTime
   gender         Gender
   nationality    String
-  direction      String
-  current        Boolean
+  address        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  child  Historic[]
-  childA Appointment[]
+  records      Record[]
+  appointments Appointment[]
+
+  @@map("children")
 }
 
-model Historic {
-  id             String      @id @default(uuid()) @db.Uuid
-  user           User        @relation(fields: [userId], references: [id])
-  userId         String
-  child          Child       @relation(fields: [childId], references: [id])
-  childId        String
-  vaccination    Vaccination @relation(fields: [vaccinationId], references: [id])
-  vaccinationId  String
-  name           String      @unique
-  dateApply      DateTime    @default(now())
-  dosesApply     Int
-  ageAtTheMoment Int
-  signature      Bytes
+model Record {
+  id               String   @id @default(uuid()) @db.Uuid
+  user             User     @relation(fields: [userId], references: [id])
+  userId           String   @db.Uuid
+  child            Child    @relation(fields: [childId], references: [id])
+  childId          String   @db.Uuid
+  vaccine          Vaccine  @relation(fields: [vaccineId], references: [id])
+  vaccineId        String   @db.Uuid
+  recordNumber     String   @unique
+  dateApplied      DateTime @default(now())
+  dosesApplied     Int
+  childAgeAtMoment Int
+  signature        Bytes?
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("records")
 }
 
 model Appointment {
-  id       String        @id @default(uuid()) @db.Uuid
-  childA   Child         @relation(fields: [childId], references: [id])
-  childId  String
-  userA    User          @relation(fields: [userId], references: [id])
-  userId   String
-  clinics  Clinics       @relation(fields: [clinicId], references: [id])
-  clinicId String
-  date     DateTime
-  state    DateAppoiment
+  id        String           @id @default(uuid()) @db.Uuid
+  child     Child            @relation(fields: [childId], references: [id])
+  childId   String           @db.Uuid
+  user      User             @relation(fields: [userId], references: [id])
+  userId    String           @db.Uuid
+  clinic    Clinic           @relation(fields: [clinicId], references: [id])
+  clinicId  String           @db.Uuid
+  date      DateTime
+  state     AppointmentState @default(PENDING)
+  notes     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@map("appointments")
 }
 
-enum DateAppoiment {
-  PENDIENT
-  CANCELED
-  DONE
+enum AppointmentState {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
 }
 
 enum Gender {
   MALE
   FEMALE
-  TERRENEITOR
-  FURRY
+  OTHER
 }

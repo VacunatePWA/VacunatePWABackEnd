@@ -177,5 +177,4 @@ enum AppointmentState {
 enum Gender {
   MALE
   FEMALE
-  OTHER
 }

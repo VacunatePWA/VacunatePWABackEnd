@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,34 +8,33 @@ datasource db {
 }
 
 model User {
-  id             String   @id @default(uuid()) @db.Uuid
-  supervisor     User?    @relation("UserSupervisor", fields: [supervisorId], references: [id])
-  supervisees    User[]   @relation("UserSupervisor")
-  supervisorId   String?  @db.Uuid
-  state          State    @relation(fields: [stateId], references: [id])
-  stateId        String   @db.Uuid
-  role           Role     @relation(fields: [roleId], references: [id])
-  roleId         String   @db.Uuid
+  id             String        @id @default(uuid()) @db.Uuid
+  supervisorId   String?       @db.Uuid
+  stateId        String        @db.Uuid
+  roleId         String        @db.Uuid
   name           String
-  identification String   @unique
+  identification String        @unique
   password       String
   phone          String
   email          String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  records      Record[]
-  appointments Appointment[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  appointments   Appointment[]
+  records        Record[]
+  role           Role          @relation(fields: [roleId], references: [id])
+  state          State         @relation(fields: [stateId], references: [id])
+  supervisor     User?         @relation("UserSupervisor", fields: [supervisorId], references: [id])
+  supervisees    User[]        @relation("UserSupervisor")
 
   @@map("users")
 }
 
 model Role {
   id          String @id @default(uuid()) @db.Uuid
-  state       State  @relation(fields: [stateId], references: [id])
   stateId     String @db.Uuid
   name        String @unique
   description String
+  state       State  @relation(fields: [stateId], references: [id])
   users       User[]
 
   @@map("roles")
@@ -48,10 +44,10 @@ model State {
   id          String   @id @default(uuid()) @db.Uuid
   name        String   @unique
   description String?
-  users       User[]
   children    Child[]
   clinics     Clinic[]
   role        Role[]
+  users       User[]
 
   @@map("states")
 }
@@ -67,8 +63,7 @@ model Guardian {
   relationship   String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-
-  children Child[]
+  children       Child[]
 
   @@map("guardians")
 }
@@ -83,60 +78,55 @@ model Vaccine {
   ageRangeMax Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  records Record[]
+  records     Record[]
 
   @@map("vaccines")
 }
 
 model Clinic {
-  id        String   @id @default(uuid()) @db.Uuid
-  state     State    @relation(fields: [stateId], references: [id])
-  stateId   String   @db.Uuid
-  name      String   @unique
-  shortName String
-  address   String
-  phone     String
-  director  String
-  website   String?
-  email     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id           String        @id @default(uuid()) @db.Uuid
+  stateId      String        @db.Uuid
+  name         String        @unique
+  shortName    String
+  address      String
+  phone        String
+  director     String
+  website      String?
+  email        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   appointments Appointment[]
+  state        State         @relation(fields: [stateId], references: [id])
 
   @@map("clinics")
 }
 
 model Child {
-  id             String   @id @default(uuid()) @db.Uuid
-  state          State    @relation(fields: [stateId], references: [id])
-  stateId        String   @db.Uuid
-  guardian       Guardian @relation(fields: [guardianId], references: [id])
-  guardianId     String   @db.Uuid
-  firstName      String
-  lastName       String
-  identification String   @unique
-  birthDate      DateTime
-  gender         Gender
-  nationality    String
-  address        String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  records      Record[]
-  appointments Appointment[]
+  id                String        @id @default(uuid()) @db.Uuid
+  stateId           String        @db.Uuid
+  guardianId        String        @db.Uuid
+  firstName         String
+  lastName          String
+  identification    String        @unique
+  birthDate         DateTime
+  gender            Gender
+  nationality       String
+  address           String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  vaccinationStatus Boolean
+  appointments      Appointment[]
+  guardian          Guardian      @relation(fields: [guardianId], references: [id])
+  state             State         @relation(fields: [stateId], references: [id])
+  records           Record[]
 
   @@map("children")
 }
 
 model Record {
   id               String   @id @default(uuid()) @db.Uuid
-  user             User     @relation(fields: [userId], references: [id])
   userId           String   @db.Uuid
-  child            Child    @relation(fields: [childId], references: [id])
   childId          String   @db.Uuid
-  vaccine          Vaccine  @relation(fields: [vaccineId], references: [id])
   vaccineId        String   @db.Uuid
   recordNumber     String   @unique
   dateApplied      DateTime @default(now())
@@ -146,23 +136,26 @@ model Record {
   notes            String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  child            Child    @relation(fields: [childId], references: [id])
+  user             User     @relation(fields: [userId], references: [id])
+  vaccine          Vaccine  @relation(fields: [vaccineId], references: [id])
 
   @@map("records")
 }
 
 model Appointment {
   id        String           @id @default(uuid()) @db.Uuid
-  child     Child            @relation(fields: [childId], references: [id])
   childId   String           @db.Uuid
-  user      User             @relation(fields: [userId], references: [id])
   userId    String           @db.Uuid
-  clinic    Clinic           @relation(fields: [clinicId], references: [id])
   clinicId  String           @db.Uuid
   date      DateTime
   state     AppointmentState @default(PENDING)
   notes     String?
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
+  child     Child            @relation(fields: [childId], references: [id])
+  clinic    Clinic           @relation(fields: [clinicId], references: [id])
+  user      User             @relation(fields: [userId], references: [id])
 
   @@map("appointments")
 }

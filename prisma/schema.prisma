@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id             String        @id @default(uuid()) @db.Uuid
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   supervisorId   String?       @db.Uuid
   stateId        String        @db.Uuid
   roleId         String        @db.Uuid
@@ -30,7 +30,7 @@ model User {
 }
 
 model Role {
-  id          String @id @default(uuid()) @db.Uuid
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   stateId     String @db.Uuid
   name        String @unique
   description String
@@ -41,7 +41,7 @@ model Role {
 }
 
 model State {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String   @unique
   description String?
   children    Child[]
@@ -53,7 +53,7 @@ model State {
 }
 
 model Guardian {
-  id             String   @id @default(uuid()) @db.Uuid
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   firstName      String
   lastName       String
   identification String   @unique
@@ -69,7 +69,7 @@ model Guardian {
 }
 
 model Vaccine {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String   @unique
   brand       String
   maxDoses    Int
@@ -84,7 +84,7 @@ model Vaccine {
 }
 
 model Clinic {
-  id           String        @id @default(uuid()) @db.Uuid
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   stateId      String        @db.Uuid
   name         String        @unique
   shortName    String
@@ -102,7 +102,7 @@ model Clinic {
 }
 
 model Child {
-  id                String        @id @default(uuid()) @db.Uuid
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   stateId           String        @db.Uuid
   guardianId        String        @db.Uuid
   firstName         String
@@ -124,7 +124,7 @@ model Child {
 }
 
 model Record {
-  id               String   @id @default(uuid()) @db.Uuid
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId           String   @db.Uuid
   childId          String   @db.Uuid
   vaccineId        String   @db.Uuid
@@ -144,7 +144,7 @@ model Record {
 }
 
 model Appointment {
-  id        String           @id @default(uuid()) @db.Uuid
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   childId   String           @db.Uuid
   userId    String           @db.Uuid
   clinicId  String           @db.Uuid

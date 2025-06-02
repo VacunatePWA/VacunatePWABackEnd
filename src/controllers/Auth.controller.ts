@@ -39,9 +39,9 @@ export class AuthController {
         
       }});
       console.log(newUser);
-      res.send(201).json({ message: "User registered" });
+      res.status(201).json({ message: "User registered" });
     } catch (error) {
-        return res.sendStatus(501); 
+        return res.sendStatus(500); 
     }
   }
 

@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { User } from "@prisma/client";
 import prisma from "../db/prisma";
 import { RegisterUserDTO } from "../DTOs/RegisterUserDTO";
 
@@ -12,7 +11,6 @@ export class AuthController {
         password,
         phone,
         role,
-        state,
         email,
         supervisor
       }:RegisterUserDTO = req.body;
@@ -20,24 +18,23 @@ export class AuthController {
       const userFounded = await prisma.user.findUnique({
         where: { identification },
       });
-
-      if (userFounded) {
+      
+      if (!userFounded) {
         return res.status(409).json({ message: "User is registered" });
       }
       // Hash the password
-      const securePassword = Bun.password.hashSync(password);
+      const securePassword = await Bun.password.hash(password);
 
       const newUser = await prisma.user.create({data: {
         identification,
         name,
-        password,
+        password: securePassword,
         phone,
         roleId: role,
-        stateId: state,
         ...(email && {email}),
         supervisorId: supervisor
-        
       }});
+
       console.log(newUser);
       res.send(201).json({ message: "User registered" });
     } catch (error) {
@@ -49,3 +46,6 @@ export class AuthController {
 
   static logOut() {}
 }
+
+
+

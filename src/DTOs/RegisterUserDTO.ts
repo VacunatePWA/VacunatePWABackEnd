@@ -6,6 +6,5 @@ export interface RegisterUserDTO {
   email?: string,
   supervisor?: string 
   role: string,
-  state: string
 }
 

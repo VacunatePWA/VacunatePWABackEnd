@@ -10,7 +10,7 @@ datasource db {
 model User {
   id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   supervisorId   String?       @db.Uuid
-  stateId        String        @db.Uuid
+  stateId        String        @db.Uuid 
   roleId         String        @db.Uuid
   name           String
   identification String        @unique

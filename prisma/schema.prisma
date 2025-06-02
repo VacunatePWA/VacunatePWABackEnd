@@ -14,7 +14,7 @@ model User {
   roleId         String        @db.Uuid
   name           String
   identification String        @unique
-  hashedPassword       String
+  password       String
   phone          String
   email          String?
   createdAt      DateTime      @default(now())
@@ -43,7 +43,7 @@ model Role {
 model State {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String   @unique
-  description String? //Esto se puede borrar
+  description String
   children    Child[]
   clinics     Clinic[]
   role        Role[]

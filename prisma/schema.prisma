@@ -13,7 +13,7 @@ model User {
   roleId         String        @db.Uuid
   name           String
   identification String        @unique
-  password       String
+  hashedPassword       String
   phone          String
   email          String?
   createdAt      DateTime      @default(now())
@@ -33,7 +33,6 @@ model Role {
   id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String @unique
   description String
-  stateId     String @db.Uuid @default("975c46bb-456e-4869-9584-7aedfa5df92f")
   state       State  @relation(fields: [stateId], references: [id])
   users       User[]
 
@@ -43,7 +42,7 @@ model Role {
 model State {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String   @unique
-  description String?
+  description String? //Esto se puede borrar
   children    Child[]
   clinics     Clinic[]
   role        Role[]
@@ -53,21 +52,56 @@ model State {
 }
 
 model Guardian {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   firstName      String
   lastName       String
-  identification String   @unique
-  email          String   @unique
+  identification String           @unique
+  email          String           @unique
   phone          String
   address        String
   relationship   String
-  stateId     String @db.Uuid @default("975c46bb-456e-4869-9584-7aedfa5df92f")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   children       Child[]
 
   @@map("guardians")
 }
+
+model Child {
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stateId           String           @db.Uuid
+  firstName         String
+  lastName          String
+  identification    String           @unique
+  birthDate         DateTime
+  gender            Gender
+  nationality       String
+  address           String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  vaccinationStatus Boolean
+  appointments      Appointment[]
+  records           Record[]
+  state             State            @relation(fields: [stateId], references: [id])
+  guardianChildren  GuardianChild[]
+
+  @@map("children")
+}
+
+model GuardianChild {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  guardianId  String    @db.Uuid
+  childId     String    @db.Uuid
+  relationship String
+  assignedAt  DateTime  @default(now())
+
+  guardian    Guardian  @relation(fields: [guardianId], references: [id])
+  child       Child     @relation(fields: [childId], references: [id])
+
+  @@unique([guardianId, childId])
+  @@map("guardian_child")
+}
+
 
 model Vaccine {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -105,6 +139,7 @@ model Clinic {
 
 model Child {
   id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stateId           String        @db.Uuid
   guardianId        String        @db.Uuid
   firstName         String
   lastName          String
@@ -113,7 +148,6 @@ model Child {
   gender            Gender
   nationality       String
   address           String
-  stateId     String @db.Uuid @default("975c46bb-456e-4869-9584-7aedfa5df92f")
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   vaccinationStatus Boolean
@@ -173,3 +207,5 @@ enum Gender {
   MALE
   FEMALE
 }
+
+

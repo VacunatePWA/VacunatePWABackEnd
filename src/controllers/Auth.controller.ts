@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
-import { User } from "@prisma/client";
-import prisma from "../db/prisma";
 import { RegisterUserDTO } from "../DTOs/RegisterUserDTO";
+import prisma from "../db/prisma";
 
 export class AuthController {
-  static async register(req: Request, res: Response): Promise<any> {
+  static async register(req: Request, res: Response): Promise<Response> {
     try {
       const {
         identification,
@@ -30,16 +29,16 @@ export class AuthController {
       const newUser = await prisma.user.create({data: {
         identification,
         name,
-        password,
+        password: securePassword,
         phone,
         roleId: role,
         stateId: state,
         ...(email && {email}),
         supervisorId: supervisor
-        
       }});
+
       console.log(newUser);
-      res.status(201).json({ message: "User registered" });
+      return res.status(201).json({ message: "User registered" });
     } catch (error) {
         return res.sendStatus(500); 
     }

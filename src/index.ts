@@ -13,7 +13,7 @@ const corsOptions: CorsOptions = {
   credentials: true,
   origin: trueOrigin,
 };
-
+``
 app.use(cors(corsOptions));
 
 //Morgan configuration dev mode

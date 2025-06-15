@@ -10,7 +10,7 @@ datasource db {
 model User {
   id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   supervisorId   String?       @db.Uuid
-  stateId        String        @default(dbgenerated("'975c46bb-456e-4869-9584-7aedfa5df92f'::uuid")) @db.Uuid
+  stateId        String        @default("975c46bb-456e-4869-9584-7aedfa5df92f") @db.Uuid
   roleId         String        @db.Uuid
   name           String
   identification String        @unique
@@ -31,7 +31,7 @@ model User {
 
 model Role {
   id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  stateId     String @default(dbgenerated("'975c46bb-456e-4869-9584-7aedfa5df92f'::uuid")) @db.Uuid
+  stateId     String @default("975c46bb-456e-4869-9584-7aedfa5df92f") @db.Uuid
   name        String @unique
   description String
   state       State  @relation(fields: [stateId], references: [id])
@@ -43,7 +43,7 @@ model Role {
 model State {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String   @unique
-  description String?
+  description String
   children    Child[]
   clinics     Clinic[]
   role        Role[]
@@ -53,42 +53,53 @@ model State {
 }
 
 model Guardian {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  firstName      String
-  lastName       String
-  identification String   @unique
-  email          String   @unique
-  phone          String
-  address        String
-  relationship   String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  stateId        String   @default(dbgenerated("'975c46bb-456e-4869-9584-7aedfa5df92f'::uuid")) @db.Uuid
-  children       Child[]
+  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  firstName        String
+  lastName         String
+  identification   String          @unique
+  email            String          @unique
+  phone            String
+  address          String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  guardianChildren GuardianChild[]
 
   @@map("guardians")
 }
 
 model Child {
-  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  stateId           String        @default(dbgenerated("'975c46bb-456e-4869-9584-7aedfa5df92f'::uuid")) @db.Uuid
-  guardianId        String        @db.Uuid
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stateId           String          @default("975c46bb-456e-4869-9584-7aedfa5df92f") @db.Uuid
   firstName         String
   lastName          String
-  identification    String        @unique
+  identification    String          @unique
   birthDate         DateTime
   gender            Gender
   nationality       String
   address           String
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
   vaccinationStatus Boolean
   appointments      Appointment[]
-  guardians         Guardian      @relation(fields: [guardianId], references: [id])
-  state             State         @relation(fields: [stateId], references: [id])
   records           Record[]
+  state             State           @relation(fields: [stateId], references: [id])
+  guardianChildren  GuardianChild[]
 
   @@map("children")
+}
+
+model GuardianChild {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  guardianId   String   @db.Uuid
+  childId      String   @db.Uuid
+  relationship String
+  assignedAt   DateTime @default(now())
+
+  guardian Guardian @relation(fields: [guardianId], references: [id])
+  child    Child    @relation(fields: [childId], references: [id])
+
+  @@unique([guardianId, childId])
+  @@map("guardian_child")
 }
 
 model Vaccine {
@@ -101,7 +112,6 @@ model Vaccine {
   ageRangeMax Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  stateId     String   @default(dbgenerated("'975c46bb-456e-4869-9584-7aedfa5df92f'::uuid")) @db.Uuid
   records     Record[]
 
   @@map("vaccines")
@@ -109,7 +119,7 @@ model Vaccine {
 
 model Clinic {
   id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  stateId      String        @default(dbgenerated("'975c46bb-456e-4869-9584-7aedfa5df92f'::uuid")) @db.Uuid
+  stateId      String        @db.Uuid
   name         String        @unique
   shortName    String
   address      String
@@ -146,18 +156,18 @@ model Record {
 }
 
 model Appointment {
-  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  childId          String           @db.Uuid
-  userId           String           @db.Uuid
-  clinicId         String           @db.Uuid
-  date             DateTime
-  notes            String?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  appointmentState AppointmentState @default(PENDING)
-  child            Child            @relation(fields: [childId], references: [id])
-  clinic           Clinic           @relation(fields: [clinicId], references: [id])
-  user             User             @relation(fields: [userId], references: [id])
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  childId   String           @db.Uuid
+  userId    String           @db.Uuid
+  clinicId  String           @db.Uuid
+  date      DateTime
+  state     AppointmentState @default(PENDING)
+  notes     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  child     Child            @relation(fields: [childId], references: [id])
+  clinic    Clinic           @relation(fields: [clinicId], references: [id])
+  user      User             @relation(fields: [userId], references: [id])
 
   @@map("appointments")
 }

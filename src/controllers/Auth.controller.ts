@@ -50,14 +50,14 @@ export class AuthController {
     }
   }
 
-  static async logIn(req: Request, res:Response): Promise<Response> {
-    const {identification, password} = req.body as LogInUserDTO;
+// // // //   // static async logIn(req: Request, res:Response): Promise<Response> {
+// // // //   //   const {identification, password} = req.body as LogInUserDTO;
 
-    const userFounded = await prisma.user.findUnique({where: {identification}});
+// const userFounded = await prisma.user.findUnique({where: {identification}});
 
-    if(!userFounded){
+//  if(!userFounded){
 
-  }
+// }
 
-  static logOut() {}
+// static logOut() {}
 }

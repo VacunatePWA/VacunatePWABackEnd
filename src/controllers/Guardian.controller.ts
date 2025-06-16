@@ -5,7 +5,7 @@ import prisma from "../db/prisma";
 export class GuardianController {
   static async getAllGuardians(req: Request, res: Response): Promise<any> {
     try {
-      const guardians = await prisma.record.findMany({
+      const guardians = await prisma.clinic.findMany({
         where: { active: true },
 
         orderBy: { createdAt: "desc" },

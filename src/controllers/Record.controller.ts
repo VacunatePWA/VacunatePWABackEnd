@@ -28,7 +28,6 @@ export class RecordController {
         notes,
       } = req.body as AddRecordDTO;
 
-      // Buscar IDs
       const child = await prisma.child.findUnique({
         where: { identification: identificationChild },
       });
@@ -73,7 +72,6 @@ export class RecordController {
         notes,
       } = req.body as AddRecordDTO;
 
-      // Buscar IDs
       const child = await prisma.child.findUnique({
         where: { identification: identificationChild },
       });
@@ -89,7 +87,6 @@ export class RecordController {
       });
       if (!vaccine) return res.status(404).json({ message: "Vaccine not found" });
 
-      // Buscar el record que coincida con los tres IDs
       const record = await prisma.record.findFirst({
         where: {
           childId: child.idChild,

@@ -37,12 +37,11 @@ app.use('/api', roleRouter) //Roles
 app.use('/api', vaccineRouter) //Vaccines
 app.use('/api', guardianRouter) //Guardians
 app.use('/api', clinicRouter) //Clinics
-app.use('/api', childRouter) //Clinics
+app.use('/api', childRouter) //Childs
 app.use('/api', recordRouter) //Records
 app.use('/api', appointmentRouter) //Appointments
-app.use('/api', recordRouter) //Records
-app.use('/api', vaccineSchemaRouter) //Records
-app.use('/api', GuardianChildRouter) //Records
+app.use('/api', vaccineSchemaRouter) //VaccineSchema
+app.use('/api', GuardianChildRouter) //GuardianChild
 
 
 app.get("/", (req, res) => {

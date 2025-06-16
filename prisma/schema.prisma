@@ -8,83 +8,75 @@ datasource db {
 }
 
 model User {
-  idUser             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   supervisorId       String?            @db.Uuid
   roleId             String             @db.Uuid
-  active             Boolean            @default(true)
-  firstName          String
-  lastName           String
-  identificationType IdentificationType
   identification     String             @unique
   password           String
   phone              String
   email              String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  appointments Appointment[]
-  records      Record[]
-  role         Role          @relation(fields: [roleId], references: [idRole])
-  supervisor   User?         @relation("UserSupervisor", fields: [supervisorId], references: [idUser])
-  supervisees  User[]        @relation("UserSupervisor")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  active             Boolean            @default(true)
+  firstName          String
+  idUser             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identificationType IdentificationType
+  lastName           String
+  appointments       Appointment[]
+  records            Record[]
+  role               Role               @relation(fields: [roleId], references: [idRole])
+  supervisor         User?              @relation("UserSupervisor", fields: [supervisorId], references: [idUser])
+  supervisees        User[]             @relation("UserSupervisor")
 
   @@map("users")
 }
 
 model Role {
-  idRole      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  active      Boolean @default(true)
-  name        String  @unique
+  name        String   @unique
   description String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  users User[]
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  idRole      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  updatedAt   DateTime @updatedAt
+  users       User[]
 
   @@map("roles")
 }
 
 model Guardian {
-  idGuardian         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  active             Boolean            @default(true)
   firstName          String
   lastName           String
-  identificationType IdentificationType
   identification     String             @unique
   email              String             @unique
   phone              String
   address            String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  guardianChildren GuardianChild[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  active             Boolean            @default(true)
+  idGuardian         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identificationType IdentificationType
+  guardianChildren   GuardianChild[]
 
   @@map("guardians")
 }
 
 model Child {
-  idChild            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  active             Boolean            @default(true)
   firstName          String
   lastName           String
-  identificationType IdentificationType
   identification     String             @unique
   birthDate          DateTime
   gender             Gender
   nationality        String
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  vaccinationStatus  Boolean            @default(false)
+  active             Boolean            @default(true)
   city               String
+  idChild            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identificationType IdentificationType
   municipality       String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  vaccinationStatus Boolean
-  appointments      Appointment[]
-  records           Record[]
-  guardianChildren  GuardianChild[]
+  appointments       Appointment[]
+  guardianChildren   GuardianChild[]
+  records            Record[]
 
   @@map("children")
 }
@@ -96,104 +88,94 @@ model GuardianChild {
   childId         String       @db.Uuid
   relationship    Relationship
   assignedAt      DateTime     @default(now())
-
-  guardian Guardian @relation(fields: [guardianId], references: [idGuardian])
-  child    Child    @relation(fields: [childId], references: [idChild])
+  child           Child        @relation(fields: [childId], references: [idChild])
+  guardian        Guardian     @relation(fields: [guardianId], references: [idGuardian])
 
   @@unique([guardianId, childId])
   @@map("guardian_child")
 }
 
 model Vaccine {
-  idVaccine   String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  active      Boolean @default(true)
-  name        String  @unique
-  brand       String
-  description String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  records Record[]
+  name          String          @unique
+  brand         String
+  description   String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  active        Boolean         @default(true)
+  idVaccine     String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   vaccineSchema VaccineSchema[]
+  records       Record[]
 
   @@map("vaccines")
 }
 
 model Clinic {
-  idClinic     String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  active       Boolean @default(true)
-  name         String  @unique
+  name         String        @unique
   shortName    String
-  city         String
-  municipality String
   phone        String
   director     String
   website      String?
   email        String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  active       Boolean       @default(true)
+  city         String
+  idClinic     String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  municipality String
+  street       String
+  latitude     Float         @db.Real
+  longitude    Float         @db.Real
   appointments Appointment[]
 
   @@map("clinics")
 }
 
 model Record {
-  idRecord         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId           String   @db.Uuid
-  childId          String   @db.Uuid
-  vaccineId        String   @db.Uuid
-  active           Boolean  @default(true)
-  recordNumber     String   @unique
-  dateApplied      DateTime @default(now())
-  dosesApplied     Int
-  childAgeAtMoment Int
-  notes            String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  child   Child   @relation(fields: [childId], references: [idChild])
-  user    User    @relation(fields: [userId], references: [idUser])
-  vaccine Vaccine @relation(fields: [vaccineId], references: [idVaccine])
+  userId       String   @db.Uuid
+  childId      String   @db.Uuid
+  vaccineId    String   @db.Uuid
+  dateApplied  DateTime @default(now())
+  dosesApplied Int
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  active       Boolean  @default(true)
+  idRecord     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  child        Child    @relation(fields: [childId], references: [idChild])
+  user         User     @relation(fields: [userId], references: [idUser])
+  vaccine      Vaccine  @relation(fields: [vaccineId], references: [idVaccine])
 
   @@map("records")
 }
 
 model Appointment {
-  idAppointment String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   childId       String           @db.Uuid
   userId        String           @db.Uuid
   clinicId      String           @db.Uuid
-  active        Boolean          @default(true)
   date          DateTime
   state         AppointmentState @default(PENDING)
   notes         String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  child  Child  @relation(fields: [childId], references: [idChild])
-  clinic Clinic @relation(fields: [clinicId], references: [idClinic])
-  user   User   @relation(fields: [userId], references: [idUser])
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  active        Boolean          @default(true)
+  idAppointment String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  child         Child            @relation(fields: [childId], references: [idChild])
+  clinic        Clinic           @relation(fields: [clinicId], references: [idClinic])
+  user          User             @relation(fields: [userId], references: [idUser])
 
   @@map("appointments")
 }
 
 model VaccineSchema {
-  idVaccineSchema String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  idVaccine       String @db.Uuid
+  idVaccineSchema String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  idVaccine       String   @db.Uuid
   name            String
   age             Int
   Description     String
-  Doses Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  vaccine Vaccine @relation(fields: [idVaccine], references: [idVaccine])
+  Doses           Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  vaccine         Vaccine  @relation(fields: [idVaccine], references: [idVaccine])
 }
 
 enum IdentificationType {

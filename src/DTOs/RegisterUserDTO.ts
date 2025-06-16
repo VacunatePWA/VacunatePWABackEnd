@@ -8,7 +8,6 @@ export interface RegisterUserDTO {
   password: string;
   phone: string;
   email: string;
-  supervisor: string | null;
+  supervisorIdentification?: string;
   role: string;
-  active: boolean;
 }

@@ -22,6 +22,7 @@
     "zod": "^3.25.39"
   },
   "scripts": {
-    "dev": "bun --watch run ./src/index.ts"
+    "dev": "bun --watch run ./src/index.ts",
+    "password": "bun run ./src/utils/passwordGenerate.ts"
   }
 }

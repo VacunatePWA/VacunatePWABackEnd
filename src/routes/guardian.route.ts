@@ -3,12 +3,12 @@ import { GuardianController } from "../controllers/Guardian.controller.ts";
 
 const router: Router = Router();
 
-const { addguardian, deleteguardian, getAllguardians, updateguardian } =
+const { addGuardian, deleteGuardian, getAllGuardians, updateGuardian } =
   GuardianController;
 
-router.get("/guardians", getAllguardians);
-router.post("/guardian", addguardian);
-router.put("/guardian", updateguardian);
-router.delete("/guardian", deleteguardian);
+router.get("/guardians", getAllGuardians);
+router.post("/guardian", addGuardian);
+router.put("/guardian", updateGuardian);
+router.delete("/guardian", deleteGuardian);
 
 export { router as guardianRouter };

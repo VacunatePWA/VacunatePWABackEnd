@@ -25,8 +25,8 @@ export class RoleController {
     try {
       const { name, description } = req.body as AddRoleDTO;
 
-      const existing = await prisma.role.findUnique({ where: { name } });
-      if (existing) {
+      const roleFounded = await prisma.role.findUnique({ where: { name } });
+      if (roleFounded) {
         return res
           .status(409)
           .json({ message: `Role "${name}" already exists.` });
@@ -38,7 +38,6 @@ export class RoleController {
 
       return res.status(201).json(newRole);
     } catch (error) {
-      console.error("Error creating role:", error);
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",
@@ -50,19 +49,18 @@ export class RoleController {
     const { name, description } = req.body as AddRoleDTO;
 
     try {
-      const existing = await prisma.role.findUnique({ where: { name } });
+      const roleFounded = await prisma.role.findUnique({ where: { name } });
 
-      if (!existing) {
+      if (!roleFounded) {
         return res.status(404).json({ message: "Role not found." });
       }
 
       await prisma.role.update({
-        where: { idRole: existing.idRole },
+        where: { idRole: roleFounded.idRole },
         data: { name, description },
       });
       return res.status(200).json({ message: "Role updated successfully." });
     } catch (error) {
-      console.error("Error updating role:", error);
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",
@@ -74,19 +72,18 @@ export class RoleController {
     try {
       const { name } = req.body as AddRoleDTO;
 
-      const existing = await prisma.role.findUnique({ where: { name } });
+      const roleFounded = await prisma.role.findUnique({ where: { name } });
 
-      if (!existing) {
+      if (!roleFounded) {
         return res.status(404).json({ message: "Role not found." });
       }
 
       await prisma.role.update({
-        where: { idRole: existing.idRole },
+        where: { idRole: roleFounded.idRole },
         data: { active: false },
       });
       return res.status(200).json({ message: "Role deleted successfully." });
     } catch (error) {
-      console.error("Error deleting role:", error);
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",

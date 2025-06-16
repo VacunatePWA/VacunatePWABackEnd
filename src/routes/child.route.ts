@@ -3,12 +3,12 @@ import { ChildController } from "../controllers/Child.controller.ts";
 
 const router: Router = Router();
 
-const { addchild, deletechild, getAllchilds, updatechild } =
+const { addChild, deleteChild, getAllChilds, updateChild } =
   ChildController;
 
-router.get("/childs", getAllchilds);
-router.post("/child", addchild);
-router.put("/child", updatechild);
-router.delete("/child", deletechild);
+router.get("/childs", getAllChilds);
+router.post("/child", addChild);
+router.put("/child", updateChild);
+router.delete("/child", deleteChild);
 
 export { router as childRouter };

@@ -5,12 +5,11 @@ import prisma from "../db/prisma";
 export class RecordController {
   static async getAllRecords(req: Request, res: Response): Promise<any> {
     try {
-      const Records = await prisma.record.findMany({
+      const records = await prisma.record.findMany({
         where: { active: true },
-
         orderBy: { createdAt: "desc" },
       });
-      return res.status(200).json(Records);
+      return res.status(200).json(records);
     } catch (error) {
       return res.status(500).json({
         message:
@@ -21,10 +20,38 @@ export class RecordController {
 
   static async addRecord(req: Request, res: Response): Promise<any> {
     try {
-      const { childId, userId, vaccineId, dosesApplied, notes } = req.body as AddRecordDTO;
+      const {
+        identificationChild,
+        identificationUser,
+        vaccineName,
+        dosesApplied,
+        notes,
+      } = req.body as AddRecordDTO;
+
+      // Buscar IDs
+      const child = await prisma.child.findUnique({
+        where: { identification: identificationChild },
+      });
+      if (!child) return res.status(404).json({ message: "Child not found" });
+
+      const user = await prisma.user.findUnique({
+        where: { identification: identificationUser },
+      });
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const vaccine = await prisma.vaccine.findUnique({
+        where: { name: vaccineName },
+      });
+      if (!vaccine) return res.status(404).json({ message: "Vaccine not found" });
 
       const newRecord = await prisma.record.create({
-        data: { childId, userId, vaccineId, dosesApplied, notes },
+        data: {
+          childId: child.idChild,
+          userId: user.idUser,
+          vaccineId: vaccine.idVaccine,
+          dosesApplied,
+          notes,
+        },
       });
 
       return res.status(201).json(newRecord);
@@ -37,22 +64,55 @@ export class RecordController {
   }
 
   static async updateRecord(req: Request, res: Response): Promise<any> {
-    const { idRecord, childId, userId, vaccineId, dosesApplied, notes } = req.body as AddRecordDTO;
-
     try {
-      const existing = await prisma.record.findUnique({ where: { idRecord } });
+      const {
+        identificationChild,
+        identificationUser,
+        vaccineName,
+        dosesApplied,
+        notes,
+      } = req.body as AddRecordDTO;
 
-      if (!existing) {
+      // Buscar IDs
+      const child = await prisma.child.findUnique({
+        where: { identification: identificationChild },
+      });
+      if (!child) return res.status(404).json({ message: "Child not found" });
+
+      const user = await prisma.user.findUnique({
+        where: { identification: identificationUser },
+      });
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const vaccine = await prisma.vaccine.findUnique({
+        where: { name: vaccineName },
+      });
+      if (!vaccine) return res.status(404).json({ message: "Vaccine not found" });
+
+      // Buscar el record que coincida con los tres IDs
+      const record = await prisma.record.findFirst({
+        where: {
+          childId: child.idChild,
+          userId: user.idUser,
+          vaccineId: vaccine.idVaccine,
+          active: true,
+        },
+      });
+
+      if (!record) {
         return res.status(404).json({ message: "Record not found." });
       }
 
       await prisma.record.update({
-        where: { idRecord: existing.idRecord },
-        data: { childId, userId, vaccineId, dosesApplied, notes },
+        where: { idRecord: record.idRecord },
+        data: {
+          dosesApplied,
+          notes,
+        },
       });
+
       return res.status(200).json({ message: "Record updated successfully." });
     } catch (error) {
-      console.error("Error updating Record:", error);
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",
@@ -60,4 +120,5 @@ export class RecordController {
     }
   }
 }
+
 export default new RecordController();

@@ -1,8 +1,8 @@
 export interface AddRecordDTO {
   idRecord:string;
-  userId:string;
-  vaccineId:string;
-  childId:string;
+  identificationUser:string;
+  vaccineName:string;
+  identificationChild:string;
   dosesApplied: number;
   notes?: string;
 }

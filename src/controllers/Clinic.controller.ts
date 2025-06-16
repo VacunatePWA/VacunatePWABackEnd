@@ -3,7 +3,7 @@ import { AddClinicDTO } from "../DTOs/AddClinicDTO";
 import prisma from "../db/prisma";
 
 export class ClinicController {
-  static async getAllclinics(req: Request, res: Response): Promise<any> {
+  static async getAllClinics(req: Request, res: Response): Promise<any> {
     try {
       const clinics = await prisma.record.findMany({
         where: { active: true },
@@ -19,12 +19,12 @@ export class ClinicController {
     }
   }
 
-  static async addclinic(req: Request, res: Response): Promise<any> {
+  static async addClinic(req: Request, res: Response): Promise<any> {
     try {
       const { name, shortName, city, municipality, street, phone, director, website, email, latitude, longitude } = req.body as AddClinicDTO;
 
-      const existing = await prisma.clinic.findUnique({ where: { name } });
-      if (existing) {
+      const clinicFounded = await prisma.clinic.findUnique({ where: { name } });
+      if (clinicFounded) {
         return res
           .status(409)
           .json({ message: `Clinic "${name}" already exists.` });
@@ -43,23 +43,22 @@ export class ClinicController {
     }
   }
 
-  static async updateclinic(req: Request, res: Response): Promise<any> {
+  static async updateClinic(req: Request, res: Response): Promise<any> {
     const { name, shortName, city, municipality, street, phone, director, website, email, latitude, longitude } = req.body as AddClinicDTO;
 
     try {
-      const existing = await prisma.clinic.findUnique({ where: { name } });
+      const clinicFounded = await prisma.clinic.findUnique({ where: { name } });
 
-      if (!existing) {
+      if (!clinicFounded) {
         return res.status(404).json({ message: "Clinic not found." });
       }
 
       await prisma.clinic.update({
-        where: { idClinic: existing.idClinic },
+        where: { idClinic: clinicFounded.idClinic },
         data: { name, shortName, city, municipality, street, phone, director, website, email, latitude, longitude },
       });
       return res.status(200).json({ message: "Clinic updated successfully." });
     } catch (error) {
-      console.error("Error updating clinic:", error);
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",
@@ -67,23 +66,22 @@ export class ClinicController {
     }
   }
 
-  static async deleteclinic(req: Request, res: Response): Promise<any> {
+  static async deleteClinic(req: Request, res: Response): Promise<any> {
     try {
       const { name } = req.body as AddClinicDTO;
 
-      const existing = await prisma.clinic.findUnique({ where: { name } });
+      const clinicFounded = await prisma.clinic.findUnique({ where: { name } });
 
-      if (!existing) {
+      if (!clinicFounded) {
         return res.status(404).json({ message: "Clinic not found." });
       }
 
       await prisma.clinic.update({
-        where: { idClinic: existing.idClinic },
+        where: { idClinic: clinicFounded.idClinic },
         data: { active: false },
       });
       return res.status(200).json({ message: "Clinic deleted successfully." });
     } catch (error) {
-      console.error("Error deleting clinic:", error);
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",

@@ -3,7 +3,7 @@ import { AddGuardianDTO } from "../DTOs/AddGuardianDTO";
 import prisma from "../db/prisma";
 
 export class GuardianController {
-  static async getAllguardians(req: Request, res: Response): Promise<any> {
+  static async getAllGuardians(req: Request, res: Response): Promise<any> {
     try {
       const guardians = await prisma.record.findMany({
         where: { active: true },
@@ -19,12 +19,12 @@ export class GuardianController {
     }
   }
 
-  static async addguardian(req: Request, res: Response): Promise<any> {
+  static async addGuardian(req: Request, res: Response): Promise<any> {
     try {
       const { firstName, lastName, identificationType, identification, email, phone, address } = req.body as AddGuardianDTO;
 
-      const existing = await prisma.guardian.findUnique({ where: { identification } });
-      if (existing) {
+      const clinicFounded = await prisma.guardian.findUnique({ where: { identification } });
+      if (clinicFounded) {
         return res
           .status(409)
           .json({ message: `Guardian "${identification}" already exists.` });
@@ -43,23 +43,22 @@ export class GuardianController {
     }
   }
 
-  static async updateguardian(req: Request, res: Response): Promise<any> {
+  static async updateGuardian(req: Request, res: Response): Promise<any> {
     const { firstName, lastName, identification, email, phone, address } = req.body as AddGuardianDTO;
 
     try {
-      const existing = await prisma.guardian.findUnique({ where: { identification } });
+      const clinicFounded = await prisma.guardian.findUnique({ where: { identification } });
 
-      if (!existing) {
+      if (!clinicFounded) {
         return res.status(404).json({ message: "Guardian not found." });
       }
 
       await prisma.guardian.update({
-        where: { idGuardian: existing.idGuardian },
+        where: { idGuardian: clinicFounded.idGuardian },
         data: { firstName, lastName, email, phone, address },
       });
       return res.status(200).json({ message: "Guardian updated successfully." });
     } catch (error) {
-      console.error("Error updating guardian:", error);
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",
@@ -67,23 +66,22 @@ export class GuardianController {
     }
   }
 
-  static async deleteguardian(req: Request, res: Response): Promise<any> {
+  static async deleteGuardian(req: Request, res: Response): Promise<any> {
     try {
       const { identification } = req.body as AddGuardianDTO;
 
-      const existing = await prisma.guardian.findUnique({ where: { identification } });
+      const clinicFounded = await prisma.guardian.findUnique({ where: { identification } });
 
-      if (!existing) {
+      if (!clinicFounded) {
         return res.status(404).json({ message: "Guardian not found." });
       }
 
       await prisma.guardian.update({
-        where: { idGuardian: existing.idGuardian },
+        where: { idGuardian: clinicFounded.idGuardian },
         data: { active: false },
       });
       return res.status(200).json({ message: "Guardian deleted successfully." });
     } catch (error) {
-      console.error("Error deleting guardian:", error);
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",

@@ -2,6 +2,15 @@ import express, { json } from "express";
 import cors, { CorsOptions, StaticOrigin } from "cors";
 import morgan from "morgan";
 import { authRouter } from "./routes/auth.route";
+import { roleRouter } from "./routes/role.route";
+import { vaccineRouter } from "./routes/vaccine.route";
+import { guardianRouter } from "./routes/guardian.route";
+import { clinicRouter } from "./routes/clinic.route";
+import { childRouter } from "./routes/child.route";
+import { recordRouter } from "./routes/record.route";
+import { appointmentRouter } from "./routes/appointment.route";
+import { vaccineSchemaRouter } from "./routes/vaccineSchema.route";
+import { GuardianChildRouter } from "./routes/guardianChild.route";
 
 const app = express();
 
@@ -24,6 +33,17 @@ app.use(json());
 
 //API routes
 app.use('/api', authRouter) //Authentication
+app.use('/api', roleRouter) //Roles
+app.use('/api', vaccineRouter) //Vaccines
+app.use('/api', guardianRouter) //Guardians
+app.use('/api', clinicRouter) //Clinics
+app.use('/api', childRouter) //Clinics
+app.use('/api', recordRouter) //Records
+app.use('/api', appointmentRouter) //Appointments
+app.use('/api', recordRouter) //Records
+app.use('/api', vaccineSchemaRouter) //Records
+app.use('/api', GuardianChildRouter) //Records
+
 
 app.get("/", (req, res) => {
   res.send("Hola mundo");

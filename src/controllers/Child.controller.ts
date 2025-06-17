@@ -5,7 +5,7 @@ import prisma from "../db/prisma";
 export class ChildController {
   static async getAllChilds(req: Request, res: Response): Promise<any> {
     try {
-      const Childs = await prisma.record.findMany({
+      const Childs = await prisma.child.findMany({
         where: { active: true },
 
         orderBy: { createdAt: "desc" },

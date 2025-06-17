@@ -3,11 +3,12 @@ import { VaccineSchemaController } from "../controllers/VaccineSchema.controller
 
 const router: Router = Router();
 
-const { addVaccineSchema, getAllVaccineSchemas, updateVaccineSchema } =
+const { addVaccineSchema, getAllVaccineSchemas, updateVaccineSchema, deleteVaccineSchema } =
   VaccineSchemaController;
 
 router.get("/vaccineSchemas", getAllVaccineSchemas);
 router.post("/vaccineSchema", addVaccineSchema);
 router.put("/vaccineSchema", updateVaccineSchema);
+router.put("/vaccineSchema", deleteVaccineSchema);
 
 export { router as vaccineSchemaRouter };

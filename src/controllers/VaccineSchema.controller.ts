@@ -84,4 +84,46 @@ export class VaccineSchemaController {
       });
     }
   }
+
+  static async deleteVaccineSchema(req: Request, res: Response): Promise<any> {
+  try {
+    const { name, vaccineName } = req.body as {
+      name: string;
+      vaccineName: string;
+    };
+
+    // Verificar que la vacuna existe
+    const vaccine = await prisma.vaccine.findUnique({
+      where: { name: vaccineName },
+    });
+
+    if (!vaccine) {
+      return res.status(404).json({ message: "Vaccine not found." });
+    }
+
+    // Buscar el esquema de vacuna
+    const schema = await prisma.vaccineSchema.findFirst({
+      where: {
+        name,
+        idVaccine: vaccine.idVaccine,
+      },
+    });
+
+    if (!schema) {
+      return res.status(404).json({ message: "VaccineSchema not found." });
+    }
+
+    // Eliminar el esquema
+    await prisma.vaccineSchema.delete({
+      where: { idVaccineSchema: schema.idVaccineSchema },
+    });
+
+    return res.status(200).json({ message: "VaccineSchema deleted successfully." });
+  } catch (error) {
+    return res.status(500).json({
+      message: error instanceof Error ? error.message : "Internal server error",
+    });
+  }
+}
+
 }

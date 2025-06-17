@@ -5,7 +5,7 @@ import prisma from "../db/prisma";
 export class VaccineController {
   static async getAllVaccines(req: Request, res: Response): Promise<any> {
     try {
-      const Vaccines = await prisma.record.findMany({
+      const Vaccines = await prisma.vaccine.findMany({
         where: { active: true },
 
         orderBy: { createdAt: "desc" },

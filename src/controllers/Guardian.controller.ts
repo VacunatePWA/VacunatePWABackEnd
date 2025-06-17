@@ -16,6 +16,42 @@ export class GuardianController {
       });
     }
   }
+  
+  static async getChildrenByGuardian(req: Request, res: Response): Promise<any> {
+    try {
+      const { identification } = req.params;
+
+      if (!identification) {
+        return res.status(400).json({ message: "Missing guardian identification in URL." });
+      }
+
+      const guardian = await prisma.guardian.findUnique({
+        where: { identification },
+        include: {
+          guardianChildren: {
+            where: { active: true },
+            include: {
+              child: true,
+            },
+          },
+        },
+      });
+
+      if (!guardian) {
+        return res.status(404).json({ message: "Guardian not found." });
+      }
+
+      const children = guardian.guardianChildren.map(gc => gc.child);
+
+      return res.status(200).json(children);
+    } catch (error) {
+      return res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
+
 
   static async addGuardian(req: Request, res: Response): Promise<any> {
     try {

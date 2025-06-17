@@ -19,6 +19,41 @@ export class AppointmentController {
     }
   }
 
+  static async getAppointmentsByChild(req: Request, res: Response): Promise<any> {
+    try {
+      const { identificationChild } = req.params;
+
+      if (!identificationChild) {
+        return res.status(400).json({ message: "Missing child identification in URL." });
+      }
+
+      const child = await prisma.child.findUnique({
+        where: { identification: identificationChild },
+      });
+
+      if (!child) {
+        return res.status(404).json({ message: "Child not found" });
+      }
+
+      const appointments = await prisma.appointment.findMany({
+        where: { childId: child.idChild },
+        orderBy: { date: "desc" },
+        include: {
+          clinic: true,
+          user: true,
+        },
+      });
+
+      return res.status(200).json(appointments);
+    } catch (error) {
+      return res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
+
+
   static async addAppointment(req: Request, res: Response): Promise<any> {
     try {
       const {

@@ -7,5 +7,6 @@ export interface AddGuardianDTO {
   identification: string;
   email: string;
   phone: string;
-  address: string;
+  city?: string;         
+  municipality?: string; 
 }

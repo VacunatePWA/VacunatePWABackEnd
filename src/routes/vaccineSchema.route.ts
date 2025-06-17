@@ -12,3 +12,4 @@ router.put("/vaccineSchema", updateVaccineSchema);
 router.delete("/vaccineSchema", deleteVaccineSchema);
 
 export { router as vaccineSchemaRouter };
+   

@@ -5,11 +5,10 @@ import prisma from "../db/prisma";
 export class VaccineController {
   static async getAllVaccines(req: Request, res: Response): Promise<any> {
     try {
-      const Vaccines = await prisma.vaccine.findMany({
-        where: { active: true },
+      const vaccines = await prisma.vaccine.findMany({
         orderBy: { createdAt: "desc" },
       });
-      return res.status(200).json(Vaccines);
+      return res.status(200).json(vaccines);
     } catch (error) {
       return res.status(500).json({
         message:
@@ -22,33 +21,24 @@ export class VaccineController {
     try {
       const { name, brand, description } = req.body as AddVaccineDTO;
 
-      const vaccineFounded = await prisma.vaccine.findUnique({ 
-        where: { 
-          name,
-          active: true 
-        } 
+      const vaccineFounded = await prisma.vaccine.findUnique({
+        where: { name },
       });
-      
+
       if (vaccineFounded) {
-        return res
-          .status(409)
-          .json({ message: `Vaccine "${name}" already exists and is active.` });
+        return res.status(409).json({
+          message: `Vaccine "${name}" already exists.`,
+        });
       }
 
       const newVaccine = await prisma.vaccine.create({
-        data: { 
-          name, 
-          brand, 
-          description,
-          active: true 
-        },
+        data: { name, brand, description },
       });
 
       return res.status(201).json(newVaccine);
     } catch (error) {
       return res.status(500).json({
-        message:
-          error instanceof Error ? error.message : "Internal server error",
+        message: error instanceof Error ? error.message : "Internal server error",
       });
     }
   }
@@ -57,28 +47,19 @@ export class VaccineController {
     const { name, brand, description } = req.body as AddVaccineDTO;
 
     try {
-      const vaccineFounded = await prisma.vaccine.findUnique({ 
-        where: { 
-          name,
-          active: true 
-        } 
-      });
+      const vaccineFounded = await prisma.vaccine.findUnique({ where: { name } });
 
       if (!vaccineFounded) {
-        return res.status(404).json({ message: "Vaccine not found or inactive." });
+        return res.status(404).json({ message: "Vaccine not found." });
       }
 
       const updatedVaccine = await prisma.vaccine.update({
         where: { idVaccine: vaccineFounded.idVaccine },
-        data: { 
-          name, 
-          brand, 
-          description 
-        },
+        data: { name, brand, description },
       });
 
       return res.status(200).json({ 
-        message: "Vaccine updated successfully.", 
+        message: "Vaccine updated successfully.",
         updatedVaccine 
       });
     } catch (error) {
@@ -91,55 +72,42 @@ export class VaccineController {
 
   static async deleteVaccine(req: Request, res: Response): Promise<any> {
     try {
-      const { name } = req.body as AddVaccineDTO;
+      const { name } = req.body as { name: string };
 
-      const vaccineFounded = await prisma.vaccine.findUnique({ 
-        where: { 
-          name,
-          active: true 
-        } 
-      });
+      const vaccineFounded = await prisma.vaccine.findUnique({ where: { name } });
 
       if (!vaccineFounded) {
-        return res.status(404).json({ message: "Vaccine not found or inactive." });
+        return res.status(404).json({ message: "Vaccine not found." });
       }
 
-      const activeRecordsCount = await prisma.record.count({
-        where: {
-          vaccineId: vaccineFounded.idVaccine,
-          active: true,
-        },
+      const recordsCount = await prisma.record.count({
+        where: { vaccineId: vaccineFounded.idVaccine },
       });
 
-      if (activeRecordsCount > 0) {
+      if (recordsCount > 0) {
         return res.status(400).json({ 
-          message: `Cannot delete vaccine "${name}" because it has ${activeRecordsCount} active vaccination record(s) associated with it.` 
+          message: `Cannot delete vaccine "${name}" because it has ${recordsCount} vaccination record(s) associated with it.` 
         });
       }
 
-      const activeSchemasCount = await prisma.vaccineSchema.count({
-        where: {
-          idVaccine: vaccineFounded.idVaccine,
-          active: true,
-        },
-      });
-
-      if (activeSchemasCount > 0) {
-        return res.status(400).json({ 
-          message: `Cannot delete vaccine "${name}" because it has ${activeSchemasCount} active vaccination schema(s) associated with it.` 
-        });
-      }
-
-      await prisma.vaccine.update({
+      const schemasCount = await prisma.vaccineSchema.count({
         where: { idVaccine: vaccineFounded.idVaccine },
-        data: { active: false },
+      });
+
+      if (schemasCount > 0) {
+        return res.status(400).json({ 
+          message: `Cannot delete vaccine "${name}" because it has ${schemasCount} vaccination schema(s) associated with it.` 
+        });
+      }
+
+      await prisma.vaccine.delete({
+        where: { idVaccine: vaccineFounded.idVaccine }
       });
 
       return res.status(200).json({ message: "Vaccine deleted successfully." });
     } catch (error) {
       return res.status(500).json({
-        message:
-          error instanceof Error ? error.message : "Internal server error",
+        message: error instanceof Error ? error.message : "Internal server error",
       });
     }
   }

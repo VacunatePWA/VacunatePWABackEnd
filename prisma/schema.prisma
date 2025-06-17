@@ -48,12 +48,13 @@ model Guardian {
   identification     String             @unique
   email              String             @unique
   phone              String
-  address            String
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   active             Boolean            @default(true)
   idGuardian         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   identificationType IdentificationType
+  city               String?
+  municipality       String?
   guardianChildren   GuardianChild[]
 
   @@map("guardians")

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { AddAppointmentDTO } from "../DTOs/AddAppointmentDTO";
 import prisma from "../db/prisma";
+import { tr } from "zod/v4/locales";
 
 export class AppointmentController {
   static async getAllAppointments(req: Request, res: Response): Promise<any> {
@@ -28,45 +29,37 @@ export class AppointmentController {
         identificationUser,
       } = req.body as AddAppointmentDTO;
 
-      // Buscar el ID del niño y validar que esté activo
       const child = await prisma.child.findUnique({
-        where: {
-          identification: identificationChild,
-          active: true,
-        },
+        where: { identification: identificationChild },
       });
+      if (!child) return res.status(404).json({ message: "Child not found" });
 
-      if (!child) {
-        return res.status(404).json({ message: "Child not found or inactive" });
-      }
-
-      // Buscar el ID del usuario y validar que esté activo
       const user = await prisma.user.findUnique({
-        where: {
-          identification: identificationUser,
-          active: true,
-        },
+        where: { identification: identificationUser },
       });
+      if (!user) return res.status(404).json({ message: "User not found" });
 
-      if (!user) {
-        return res.status(404).json({ message: "User not found or inactive" });
-      }
-
-      // Buscar el ID de la clínica y validar que esté activa
       const clinic = await prisma.clinic.findUnique({
+        where: { name: clinicName },
+      });
+      if (!clinic) return res.status(404).json({ message: "Clinic not found" });
+
+      const appointmentFunded = await prisma.appointment.findFirst({
         where: {
-          name: clinicName,
+          childId: child.idChild,
+          userId: user.idUser,
+          clinicId: clinic.idClinic,
+          date,
           active: true,
         },
       });
 
-      if (!clinic) {
-        return res
-          .status(404)
-          .json({ message: "Clinic not found or inactive" });
+      if (appointmentFunded) {
+        return res.status(409).json({
+          message: "An appointment with the same data already exists.",
+        });
       }
 
-      // Crear la cita
       const newAppointment = await prisma.appointment.create({
         data: {
           date,
@@ -74,7 +67,7 @@ export class AppointmentController {
           childId: child.idChild,
           userId: user.idUser,
           clinicId: clinic.idClinic,
-          active: true, // Asegurar que la nueva cita esté activa
+          active: true,
         },
       });
 
@@ -98,62 +91,49 @@ export class AppointmentController {
     } = req.body as AddAppointmentDTO;
 
     try {
-      // Buscar el niño y validar que esté activo
       const child = await prisma.child.findUnique({
         where: {
           identification: identificationChild,
-          active: true,
         },
       });
-      if (!child)
-        return res.status(404).json({ message: "Child not found or inactive" });
+      if (!child) return res.status(404).json({ message: "Child not found" });
 
-      // Buscar el usuario y validar que esté activo
       const user = await prisma.user.findUnique({
         where: {
           identification: identificationUser,
-          active: true,
         },
       });
-      if (!user)
-        return res.status(404).json({ message: "User not found or inactive" });
+      if (!user) return res.status(404).json({ message: "User not found" });
 
-      // Buscar la clínica y validar que esté activa
       const clinic = await prisma.clinic.findUnique({
         where: {
           name: clinicName,
-          active: true,
         },
       });
-      if (!clinic)
-        return res
-          .status(404)
-          .json({ message: "Clinic not found or inactive" });
+      if (!clinic) return res.status(404).json({ message: "Clinic not found" });
 
-      // Buscar la cita por los 3 IDs y validar que esté activa
-      const appointment = await prisma.appointment.findFirst({
+      const appointmentFunded = await prisma.appointment.findFirst({
         where: {
           childId: child.idChild,
           userId: user.idUser,
           clinicId: clinic.idClinic,
-          active: true,
           date: date,
+          active: true,
         },
       });
 
-      if (!appointment) {
+      if (!appointmentFunded) {
         return res
           .status(404)
           .json({ message: "Appointment not found or inactive" });
       }
 
-      // Actualizar los datos (si se pasan)
       const updatedAppointment = await prisma.appointment.update({
-        where: { idAppointment: appointment.idAppointment },
+        where: { idAppointment: appointmentFunded.idAppointment },
         data: {
-          notes: notes ?? appointment.notes,
-          state: state ?? appointment.state,
-          date: date ?? appointment.date,
+          notes: notes ?? appointmentFunded.notes,
+          state: state ?? appointmentFunded.state,
+          date: date ?? appointmentFunded.date,
         },
       });
 
@@ -174,59 +154,43 @@ export class AppointmentController {
       const { date, identificationChild, identificationUser, clinicName } =
         req.body as AddAppointmentDTO;
 
-      // Buscar al niño y validar que esté activo
       const child = await prisma.child.findUnique({
         where: {
           identification: identificationChild,
-          active: true,
         },
       });
-      if (!child)
-        return res.status(404).json({ message: "Child not found or inactive" });
+      if (!child) return res.status(404).json({ message: "Child not found" });
 
-      // Buscar al usuario y validar que esté activo
       const user = await prisma.user.findUnique({
         where: {
           identification: identificationUser,
-          active: true,
         },
       });
-      if (!user)
-        return res.status(404).json({ message: "User not found or inactive" });
+      if (!user) return res.status(404).json({ message: "User not found" });
 
-      // Buscar la clínica y validar que esté activa
       const clinic = await prisma.clinic.findUnique({
         where: {
           name: clinicName,
-          active: true,
         },
       });
-      if (!clinic)
-        return res
-          .status(404)
-          .json({ message: "Clinic not found or inactive" });
+      if (!clinic) return res.status(404).json({ message: "Clinic not found" });
 
-      // Buscar la cita y validar que esté activa
-      const appointment = await prisma.appointment.findFirst({
+      const appointmentFunded = await prisma.appointment.findFirst({
         where: {
           childId: child.idChild,
           userId: user.idUser,
           clinicId: clinic.idClinic,
           date,
-          active: true,
         },
       });
 
-      if (!appointment) {
-        return res
-          .status(404)
-          .json({ message: "Appointment not found or inactive" });
+      if (!appointmentFunded) {
+        return res.status(404).json({ message: "Appointment not found" });
       }
 
-      // Borrado lógico
-      await prisma.appointment.update({
-        where: { idAppointment: appointment.idAppointment },
-        data: { active: false },
+      // Eliminación física
+      await prisma.appointment.delete({
+        where: { idAppointment: appointmentFunded.idAppointment },
       });
 
       return res

@@ -6,7 +6,6 @@ export class ClinicController {
   static async getAllClinics(req: Request, res: Response): Promise<any> {
     try {
       const clinics = await prisma.clinic.findMany({
-        where: { active: true },
         orderBy: { createdAt: "desc" },
       });
       return res.status(200).json(clinics);
@@ -34,17 +33,14 @@ export class ClinicController {
         longitude,
       } = req.body as AddClinicDTO;
 
-      const clinicFounded = await prisma.clinic.findUnique({
-        where: {
-          name,
-          active: true,
-        },
+      const clinicExists = await prisma.clinic.findUnique({
+        where: { name },
       });
 
-      if (clinicFounded) {
+      if (clinicExists) {
         return res
           .status(409)
-          .json({ message: `Clinic "${name}" already exists and is active.` });
+          .json({ message: `Clinic "${name}" already exists.` });
       }
 
       const newClinic = await prisma.clinic.create({
@@ -60,7 +56,6 @@ export class ClinicController {
           email,
           latitude,
           longitude,
-          active: true,
         },
       });
 
@@ -89,21 +84,16 @@ export class ClinicController {
     } = req.body as AddClinicDTO;
 
     try {
-      const clinicFounded = await prisma.clinic.findUnique({
-        where: {
-          name,
-          active: true,
-        },
+      const clinic = await prisma.clinic.findUnique({
+        where: { name },
       });
 
-      if (!clinicFounded) {
-        return res
-          .status(404)
-          .json({ message: "Clinic not found or inactive." });
+      if (!clinic) {
+        return res.status(404).json({ message: "Clinic not found." });
       }
 
       const updatedClinic = await prisma.clinic.update({
-        where: { idClinic: clinicFounded.idClinic },
+        where: { idClinic: clinic.idClinic },
         data: {
           name,
           shortName,
@@ -135,22 +125,16 @@ export class ClinicController {
     try {
       const { name } = req.body as AddClinicDTO;
 
-      const clinicFounded = await prisma.clinic.findUnique({
-        where: {
-          name,
-          active: true,
-        },
+      const clinic = await prisma.clinic.findUnique({
+        where: { name },
       });
 
-      if (!clinicFounded) {
-        return res
-          .status(404)
-          .json({ message: "Clinic not found or inactive." });
+      if (!clinic) {
+        return res.status(404).json({ message: "Clinic not found." });
       }
 
-      await prisma.clinic.update({
-        where: { idClinic: clinicFounded.idClinic },
-        data: { active: false },
+      await prisma.clinic.delete({
+        where: { idClinic: clinic.idClinic },
       });
 
       return res.status(200).json({ message: "Clinic deleted successfully." });

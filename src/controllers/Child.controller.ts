@@ -32,21 +32,18 @@ export class ChildController {
         municipality,
       } = req.body as AddChildDTO;
 
-      const childFounded = await prisma.child.findUnique({
-        where: {
-          identification,
-          active: true,
-        },
+      // Verifica si ya existe un niño activo con esa identificación
+      const childExists = await prisma.child.findUnique({
+        where: { identification },
       });
 
-      if (childFounded) {
-        return res
-          .status(409)
-          .json({
-            message: `Child "${identification}" already exists and is active.`,
-          });
+      if (childExists) {
+        return res.status(409).json({
+          message: `Child "${identification}" already exists.`,
+        });
       }
 
+      // Crea uno nuevo
       const newChild = await prisma.child.create({
         data: {
           firstName,
@@ -85,24 +82,26 @@ export class ChildController {
     } = req.body as AddChildDTO;
 
     try {
-      const childFounded = await prisma.child.findUnique({
+      const childFunded = await prisma.child.findUnique({
         where: {
           identification,
           active: true,
         },
       });
 
-      if (!childFounded) {
+      if (!childFunded) {
         return res
           .status(404)
           .json({ message: "Child not found or inactive." });
       }
 
       const updatedChild = await prisma.child.update({
-        where: { idChild: childFounded.idChild },
+        where: { idChild: childFunded.idChild },
         data: {
           firstName,
           lastName,
+          identificationType,
+          birthDate,
           gender,
           nationality,
           city,
@@ -126,22 +125,16 @@ export class ChildController {
     try {
       const { identification } = req.body as AddChildDTO;
 
-      const childFounded = await prisma.child.findUnique({
-        where: {
-          identification,
-          active: true,
-        },
+      const childFunded = await prisma.child.findUnique({
+        where: { identification },
       });
 
-      if (!childFounded) {
-        return res
-          .status(404)
-          .json({ message: "Child not found or inactive." });
+      if (!childFunded) {
+        return res.status(404).json({ message: "Child not found." });
       }
 
-      await prisma.child.update({
-        where: { idChild: childFounded.idChild },
-        data: { active: false },
+      await prisma.child.delete({
+        where: { idChild: childFunded.idChild },
       });
 
       return res.status(200).json({ message: "Child deleted successfully." });

@@ -1,135 +1,113 @@
 import { Request, Response } from "express";
-import { AddVaccineDTO } from "../DTOs/AddVaccineDTO";
+import { AddRoleDTO } from "../DTOs/AddRoleDTO";
 import prisma from "../db/prisma";
 
-export class VaccineController {
-  static async getAllVaccines(req: Request, res: Response): Promise<any> {
+export class RoleController {
+  static async getAllRoles(req: Request, res: Response): Promise<any> {
     try {
-      const Vaccines = await prisma.vaccine.findMany({
-        where: { active: true },
+      const roles = await prisma.role.findMany({
         orderBy: { createdAt: "desc" },
       });
-      return res.status(200).json(Vaccines);
+      return res.status(200).json(roles);
     } catch (error) {
       return res.status(500).json({
-        message:
-          error instanceof Error ? error.message : "Internal server error",
+        message: error instanceof Error ? error.message : "Internal server error",
       });
     }
   }
 
-  static async addVaccine(req: Request, res: Response): Promise<any> {
+  static async addRole(req: Request, res: Response): Promise<any> {
     try {
-      const { name, brand, description } = req.body as AddVaccineDTO;
+      const { name, description } = req.body as AddRoleDTO;
 
-      const vaccineFounded = await prisma.vaccine.findUnique({ 
-        where: { 
-          name,
-          active: true 
-        } 
-      });
-      
-      if (vaccineFounded) {
-        return res
-          .status(409)
-          .json({ message: `Vaccine "${name}" already exists and is active.` });
-      }
-
-      const newVaccine = await prisma.vaccine.create({
-        data: { 
-          name, 
-          brand, 
-          description,
-          active: true 
-        },
+      const roleFounded = await prisma.role.findUnique({
+        where: { name },
       });
 
-      return res.status(201).json(newVaccine);
-    } catch (error) {
-      return res.status(500).json({
-        message:
-          error instanceof Error ? error.message : "Internal server error",
-      });
-    }
-  }
-
-  static async updateVaccine(req: Request, res: Response): Promise<any> {
-    const { name, brand, description } = req.body as AddVaccineDTO;
-
-    try {
-      const vaccineFounded = await prisma.vaccine.findUnique({ 
-        where: { 
-          name,
-          active: true 
-        } 
-      });
-
-      if (!vaccineFounded) {
-        return res.status(404).json({ message: "Vaccine not found or inactive." });
-      }
-
-      const updatedVaccine = await prisma.vaccine.update({
-        where: { idVaccine: vaccineFounded.idVaccine },
-        data: { 
-          name, 
-          brand, 
-          description 
-        },
-      });
-
-      return res.status(200).json({ 
-        message: "Vaccine updated successfully.", 
-        updatedVaccine 
-      });
-    } catch (error) {
-      return res.status(500).json({
-        message:
-          error instanceof Error ? error.message : "Internal server error",
-      });
-    }
-  }
-
-  static async deleteVaccine(req: Request, res: Response): Promise<any> {
-    try {
-      const { name } = req.body as AddVaccineDTO;
-
-      const vaccineFounded = await prisma.vaccine.findUnique({ 
-        where: { 
-          name,
-          active: true 
-        } 
-      });
-
-      if (!vaccineFounded) {
-        return res.status(404).json({ message: "Vaccine not found or inactive." });
-      }
-
-      const activeRecordsCount = await prisma.record.count({
-        where: {
-          vaccineId: vaccineFounded.idVaccine,
-          active: true,
-        },
-      });
-
-      if (activeRecordsCount > 0) {
-        return res.status(400).json({ 
-          message: `Cannot delete vaccine "${name}" because it has ${activeRecordsCount} active vaccination record(s) associated with it.` 
+      if (roleFounded) {
+        return res.status(409).json({
+          message: `Role "${name}" already exists.`,
         });
       }
 
-      await prisma.vaccine.update({
-        where: { idVaccine: vaccineFounded.idVaccine },
-        data: { active: false },
+      const newRole = await prisma.role.create({
+        data: {
+          name,
+          description,
+        },
       });
 
-      return res.status(200).json({ message: "Vaccine deleted successfully." });
+      return res.status(201).json(newRole);
     } catch (error) {
       return res.status(500).json({
-        message:
-          error instanceof Error ? error.message : "Internal server error",
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
+  static async updateRole(req: Request, res: Response): Promise<any> {
+    try {
+      const { name, description } = req.body as AddRoleDTO;
+
+      const roleFounded = await prisma.role.findUnique({
+        where: { name },
+      });
+
+      if (!roleFounded) {
+        return res.status(404).json({ message: "Role not found." });
+      }
+
+      const updatedRole = await prisma.role.update({
+        where: { idRole: roleFounded.idRole },
+        data: { name, description },
+      });
+
+      return res.status(200).json({
+        message: "Role updated successfully.",
+        updatedRole,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
+  static async deleteRole(req: Request, res: Response): Promise<any> {
+    try {
+      const { name } = req.body as AddRoleDTO;
+
+      const roleFounded = await prisma.role.findUnique({
+        where: { name },
+      });
+
+      if (!roleFounded) {
+        return res.status(404).json({ message: "Role not found." });
+      }
+
+      const activeUsersCount = await prisma.user.count({
+        where: {
+          roleId: roleFounded.idRole,
+        },
+      });
+
+      if (activeUsersCount > 0) {
+        return res.status(400).json({
+          message: `Cannot delete role "${name}" because it has ${activeUsersCount} user(s) assigned to it.`,
+        });
+      }
+
+      await prisma.role.delete({
+        where: { idRole: roleFounded.idRole },
+      });
+
+      return res.status(200).json({ message: "Role deleted successfully." });
+    } catch (error) {
+      return res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
       });
     }
   }
 }
 
-export default new VaccineController();
+export default new RoleController();

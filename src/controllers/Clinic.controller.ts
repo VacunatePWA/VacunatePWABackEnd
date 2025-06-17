@@ -7,7 +7,6 @@ export class ClinicController {
     try {
       const clinics = await prisma.clinic.findMany({
         where: { active: true },
-
         orderBy: { createdAt: "desc" },
       });
       return res.status(200).json(clinics);
@@ -21,20 +20,51 @@ export class ClinicController {
 
   static async addClinic(req: Request, res: Response): Promise<any> {
     try {
-      const { name, shortName, city, municipality, street, phone, director, website, email, latitude, longitude } = req.body as AddClinicDTO;
+      const {
+        name,
+        shortName,
+        city,
+        municipality,
+        street,
+        phone,
+        director,
+        website,
+        email,
+        latitude,
+        longitude,
+      } = req.body as AddClinicDTO;
 
-      const clinicFounded = await prisma.clinic.findUnique({ where: { name } });
+      const clinicFounded = await prisma.clinic.findUnique({
+        where: {
+          name,
+          active: true,
+        },
+      });
+
       if (clinicFounded) {
         return res
           .status(409)
-          .json({ message: `Clinic "${name}" already exists.` });
+          .json({ message: `Clinic "${name}" already exists and is active.` });
       }
 
-      const newclinic = await prisma.clinic.create({
-        data: { name, shortName, city, municipality, street, phone, director, website, email, latitude, longitude },
+      const newClinic = await prisma.clinic.create({
+        data: {
+          name,
+          shortName,
+          city,
+          municipality,
+          street,
+          phone,
+          director,
+          website,
+          email,
+          latitude,
+          longitude,
+          active: true,
+        },
       });
 
-      return res.status(201).json(newclinic);
+      return res.status(201).json(newClinic);
     } catch (error) {
       return res.status(500).json({
         message:
@@ -44,20 +74,55 @@ export class ClinicController {
   }
 
   static async updateClinic(req: Request, res: Response): Promise<any> {
-    const { name, shortName, city, municipality, street, phone, director, website, email, latitude, longitude } = req.body as AddClinicDTO;
+    const {
+      name,
+      shortName,
+      city,
+      municipality,
+      street,
+      phone,
+      director,
+      website,
+      email,
+      latitude,
+      longitude,
+    } = req.body as AddClinicDTO;
 
     try {
-      const clinicFounded = await prisma.clinic.findUnique({ where: { name } });
+      const clinicFounded = await prisma.clinic.findUnique({
+        where: {
+          name,
+          active: true,
+        },
+      });
 
       if (!clinicFounded) {
-        return res.status(404).json({ message: "Clinic not found." });
+        return res
+          .status(404)
+          .json({ message: "Clinic not found or inactive." });
       }
 
-      await prisma.clinic.update({
+      const updatedClinic = await prisma.clinic.update({
         where: { idClinic: clinicFounded.idClinic },
-        data: { name, shortName, city, municipality, street, phone, director, website, email, latitude, longitude },
+        data: {
+          name,
+          shortName,
+          city,
+          municipality,
+          street,
+          phone,
+          director,
+          website,
+          email,
+          latitude,
+          longitude,
+        },
       });
-      return res.status(200).json({ message: "Clinic updated successfully." });
+
+      return res.status(200).json({
+        message: "Clinic updated successfully.",
+        updatedClinic,
+      });
     } catch (error) {
       return res.status(500).json({
         message:
@@ -70,16 +135,24 @@ export class ClinicController {
     try {
       const { name } = req.body as AddClinicDTO;
 
-      const clinicFounded = await prisma.clinic.findUnique({ where: { name } });
+      const clinicFounded = await prisma.clinic.findUnique({
+        where: {
+          name,
+          active: true,
+        },
+      });
 
       if (!clinicFounded) {
-        return res.status(404).json({ message: "Clinic not found." });
+        return res
+          .status(404)
+          .json({ message: "Clinic not found or inactive." });
       }
 
       await prisma.clinic.update({
         where: { idClinic: clinicFounded.idClinic },
         data: { active: false },
       });
+
       return res.status(200).json({ message: "Clinic deleted successfully." });
     } catch (error) {
       return res.status(500).json({

@@ -7,7 +7,6 @@ export class VaccineController {
     try {
       const Vaccines = await prisma.vaccine.findMany({
         where: { active: true },
-
         orderBy: { createdAt: "desc" },
       });
       return res.status(200).json(Vaccines);
@@ -23,15 +22,26 @@ export class VaccineController {
     try {
       const { name, brand, description } = req.body as AddVaccineDTO;
 
-      const vaccineFounded = await prisma.vaccine.findUnique({ where: { name } });
+      const vaccineFounded = await prisma.vaccine.findUnique({ 
+        where: { 
+          name,
+          active: true 
+        } 
+      });
+      
       if (vaccineFounded) {
         return res
           .status(409)
-          .json({ message: `Vaccine "${name}" already exists.` });
+          .json({ message: `Vaccine "${name}" already exists and is active.` });
       }
 
       const newVaccine = await prisma.vaccine.create({
-        data: { name, brand, description },
+        data: { 
+          name, 
+          brand, 
+          description,
+          active: true 
+        },
       });
 
       return res.status(201).json(newVaccine);
@@ -44,20 +54,33 @@ export class VaccineController {
   }
 
   static async updateVaccine(req: Request, res: Response): Promise<any> {
-    const { name, description } = req.body as AddVaccineDTO;
+    const { name, brand, description } = req.body as AddVaccineDTO;
 
     try {
-      const vaccineFounded = await prisma.vaccine.findUnique({ where: { name } });
+      const vaccineFounded = await prisma.vaccine.findUnique({ 
+        where: { 
+          name,
+          active: true 
+        } 
+      });
 
       if (!vaccineFounded) {
-        return res.status(404).json({ message: "Vaccine not found." });
+        return res.status(404).json({ message: "Vaccine not found or inactive." });
       }
 
-      await prisma.vaccine.update({
+      const updatedVaccine = await prisma.vaccine.update({
         where: { idVaccine: vaccineFounded.idVaccine },
-        data: { name, description },
+        data: { 
+          name, 
+          brand, 
+          description 
+        },
       });
-      return res.status(200).json({ message: "Vaccine updated successfully." });
+
+      return res.status(200).json({ 
+        message: "Vaccine updated successfully.", 
+        updatedVaccine 
+      });
     } catch (error) {
       return res.status(500).json({
         message:
@@ -70,17 +93,49 @@ export class VaccineController {
     try {
       const { name } = req.body as AddVaccineDTO;
 
-      const vaccineFounded = await prisma.vaccine.findUnique({ where: { name } });
+      const vaccineFounded = await prisma.vaccine.findUnique({ 
+        where: { 
+          name,
+          active: true 
+        } 
+      });
 
       if (!vaccineFounded) {
-        return res.status(404).json({ message: "vaccine not found." });
+        return res.status(404).json({ message: "Vaccine not found or inactive." });
+      }
+
+      const activeRecordsCount = await prisma.record.count({
+        where: {
+          vaccineId: vaccineFounded.idVaccine,
+          active: true,
+        },
+      });
+
+      if (activeRecordsCount > 0) {
+        return res.status(400).json({ 
+          message: `Cannot delete vaccine "${name}" because it has ${activeRecordsCount} active vaccination record(s) associated with it.` 
+        });
+      }
+
+      const activeSchemasCount = await prisma.vaccineSchema.count({
+        where: {
+          idVaccine: vaccineFounded.idVaccine,
+          active: true,
+        },
+      });
+
+      if (activeSchemasCount > 0) {
+        return res.status(400).json({ 
+          message: `Cannot delete vaccine "${name}" because it has ${activeSchemasCount} active vaccination schema(s) associated with it.` 
+        });
       }
 
       await prisma.vaccine.update({
         where: { idVaccine: vaccineFounded.idVaccine },
         data: { active: false },
       });
-      return res.status(200).json({ message: "vaccine deleted successfully." });
+
+      return res.status(200).json({ message: "Vaccine deleted successfully." });
     } catch (error) {
       return res.status(500).json({
         message:

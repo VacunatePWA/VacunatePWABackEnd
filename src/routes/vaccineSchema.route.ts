@@ -9,6 +9,6 @@ const { addVaccineSchema, getAllVaccineSchemas, updateVaccineSchema, deleteVacci
 router.get("/vaccineSchemas", getAllVaccineSchemas);
 router.post("/vaccineSchema", addVaccineSchema);
 router.put("/vaccineSchema", updateVaccineSchema);
-router.put("/vaccineSchema", deleteVaccineSchema);
+router.delete("/vaccineSchema", deleteVaccineSchema);
 
 export { router as vaccineSchemaRouter };

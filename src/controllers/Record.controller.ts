@@ -28,21 +28,29 @@ export class RecordController {
         notes,
       } = req.body as AddRecordDTO;
 
-      // Buscar IDs
       const child = await prisma.child.findUnique({
-        where: { identification: identificationChild },
+        where: { 
+          identification: identificationChild,
+          active: true 
+        },
       });
-      if (!child) return res.status(404).json({ message: "Child not found" });
+      if (!child) return res.status(404).json({ message: "Child not found or inactive" });
 
       const user = await prisma.user.findUnique({
-        where: { identification: identificationUser },
+        where: { 
+          identification: identificationUser,
+          active: true 
+        },
       });
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user) return res.status(404).json({ message: "User not found or inactive" });
 
       const vaccine = await prisma.vaccine.findUnique({
-        where: { name: vaccineName },
+        where: { 
+          name: vaccineName,
+          active: true 
+        },
       });
-      if (!vaccine) return res.status(404).json({ message: "Vaccine not found" });
+      if (!vaccine) return res.status(404).json({ message: "Vaccine not found or inactive" });
 
       const newRecord = await prisma.record.create({
         data: {
@@ -51,6 +59,7 @@ export class RecordController {
           vaccineId: vaccine.idVaccine,
           dosesApplied,
           notes,
+          active: true,
         },
       });
 
@@ -73,21 +82,29 @@ export class RecordController {
         notes,
       } = req.body as AddRecordDTO;
 
-      // Buscar IDs
       const child = await prisma.child.findUnique({
-        where: { identification: identificationChild },
+        where: { 
+          identification: identificationChild,
+          active: true 
+        },
       });
-      if (!child) return res.status(404).json({ message: "Child not found" });
+      if (!child) return res.status(404).json({ message: "Child not found or inactive" });
 
       const user = await prisma.user.findUnique({
-        where: { identification: identificationUser },
+        where: { 
+          identification: identificationUser,
+          active: true 
+        },
       });
-      if (!user) return res.status(404).json({ message: "User not found" });
+      if (!user) return res.status(404).json({ message: "User not found or inactive" });
 
       const vaccine = await prisma.vaccine.findUnique({
-        where: { name: vaccineName },
+        where: { 
+          name: vaccineName,
+          active: true 
+        },
       });
-      if (!vaccine) return res.status(404).json({ message: "Vaccine not found" });
+      if (!vaccine) return res.status(404).json({ message: "Vaccine not found or inactive" });
 
       const record = await prisma.record.findFirst({
         where: {
@@ -99,10 +116,10 @@ export class RecordController {
       });
 
       if (!record) {
-        return res.status(404).json({ message: "Record not found." });
+        return res.status(404).json({ message: "Active record not found." });
       }
 
-      await prisma.record.update({
+      const updatedRecord = await prisma.record.update({
         where: { idRecord: record.idRecord },
         data: {
           dosesApplied,
@@ -110,7 +127,10 @@ export class RecordController {
         },
       });
 
-      return res.status(200).json({ message: "Record updated successfully." });
+      return res.status(200).json({ 
+        message: "Record updated successfully.", 
+        updatedRecord 
+      });
     } catch (error) {
       return res.status(500).json({
         message:
@@ -120,64 +140,69 @@ export class RecordController {
   }
 
   static async deleteRecord(req: Request, res: Response): Promise<any> {
-  try {
-    const {
-      identificationChild,
-      identificationUser,
-      vaccineName,
-    } = req.body as {
-      identificationChild: string;
-      identificationUser: string;
-      vaccineName: string;
-    };
+    try {
+      const {
+        identificationChild,
+        identificationUser,
+        vaccineName,
+      } = req.body as {
+        identificationChild: string;
+        identificationUser: string;
+        vaccineName: string;
+      };
 
-    // Buscar IDs
-    const child = await prisma.child.findUnique({
-      where: { identification: identificationChild },
-    });
-    if (!child) return res.status(404).json({ message: "Child not found" });
+      const child = await prisma.child.findUnique({
+        where: { 
+          identification: identificationChild,
+          active: true 
+        },
+      });
+      if (!child) return res.status(404).json({ message: "Child not found or inactive" });
 
-    const user = await prisma.user.findUnique({
-      where: { identification: identificationUser },
-    });
-    if (!user) return res.status(404).json({ message: "User not found" });
+      const user = await prisma.user.findUnique({
+        where: { 
+          identification: identificationUser,
+          active: true 
+        },
+      });
+      if (!user) return res.status(404).json({ message: "User not found or inactive" });
 
-    const vaccine = await prisma.vaccine.findUnique({
-      where: { name: vaccineName },
-    });
-    if (!vaccine) return res.status(404).json({ message: "Vaccine not found" });
+      const vaccine = await prisma.vaccine.findUnique({
+        where: { 
+          name: vaccineName,
+          active: true 
+        },
+      });
+      if (!vaccine) return res.status(404).json({ message: "Vaccine not found or inactive" });
 
-    // Buscar el record que coincida con los tres IDs
-    const record = await prisma.record.findFirst({
-      where: {
-        childId: child.idChild,
-        userId: user.idUser,
-        vaccineId: vaccine.idVaccine,
-        active: true,
-      },
-    });
+      const record = await prisma.record.findFirst({
+        where: {
+          childId: child.idChild,
+          userId: user.idUser,
+          vaccineId: vaccine.idVaccine,
+          active: true,
+        },
+      });
 
-    if (!record) {
-      return res.status(404).json({ message: "Record not found." });
+      if (!record) {
+        return res.status(404).json({ message: "Active record not found." });
+      }
+
+      await prisma.record.update({
+        where: { idRecord: record.idRecord },
+        data: {
+          active: false,
+        },
+      });
+
+      return res.status(200).json({ message: "Record deleted successfully." });
+    } catch (error) {
+      return res.status(500).json({
+        message:
+          error instanceof Error ? error.message : "Internal server error",
+      });
     }
-
-    // Soft delete: marcar como inactivo
-    await prisma.record.update({
-      where: { idRecord: record.idRecord },
-      data: {
-        active: false,
-      },
-    });
-
-    return res.status(200).json({ message: "Record deleted successfully (soft delete)." });
-  } catch (error) {
-    return res.status(500).json({
-      message:
-        error instanceof Error ? error.message : "Internal server error",
-    });
   }
-}
-
 }
 
 export default new RecordController();

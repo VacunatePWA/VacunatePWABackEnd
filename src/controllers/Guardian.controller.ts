@@ -7,7 +7,6 @@ export class GuardianController {
     try {
       const guardians = await prisma.guardian.findMany({
         where: { active: true },
-
         orderBy: { createdAt: "desc" },
       });
       return res.status(200).json(guardians);
@@ -23,18 +22,35 @@ export class GuardianController {
     try {
       const { firstName, lastName, identificationType, identification, email, phone, address } = req.body as AddGuardianDTO;
 
-      const clinicFounded = await prisma.guardian.findUnique({ where: { identification } });
-      if (clinicFounded) {
+      // Validar que no exista un guardian activo con la misma identificación
+      const guardianFounded = await prisma.guardian.findUnique({ 
+        where: { 
+          identification,
+          active: true 
+        } 
+      });
+      
+      if (guardianFounded) {
         return res
           .status(409)
-          .json({ message: `Guardian "${identification}" already exists.` });
+          .json({ message: `Guardian "${identification}" already exists and is active.` });
       }
 
-      const newguardian = await prisma.guardian.create({
-        data: { firstName, lastName, identificationType, identification, email, phone, address },
+      // Crear el nuevo guardian con active: true
+      const newGuardian = await prisma.guardian.create({
+        data: { 
+          firstName, 
+          lastName, 
+          identificationType, 
+          identification, 
+          email, 
+          phone, 
+          address,
+          active: true 
+        },
       });
 
-      return res.status(201).json(newguardian);
+      return res.status(201).json(newGuardian);
     } catch (error) {
       return res.status(500).json({
         message:
@@ -47,17 +63,34 @@ export class GuardianController {
     const { firstName, lastName, identification, email, phone, address } = req.body as AddGuardianDTO;
 
     try {
-      const clinicFounded = await prisma.guardian.findUnique({ where: { identification } });
+      // Buscar el guardian y validar que esté activo
+      const guardianFounded = await prisma.guardian.findUnique({ 
+        where: { 
+          identification,
+          active: true 
+        } 
+      });
 
-      if (!clinicFounded) {
-        return res.status(404).json({ message: "Guardian not found." });
+      if (!guardianFounded) {
+        return res.status(404).json({ message: "Guardian not found or inactive." });
       }
 
-      await prisma.guardian.update({
-        where: { idGuardian: clinicFounded.idGuardian },
-        data: { firstName, lastName, email, phone, address },
+      // Actualizar el guardian
+      const updatedGuardian = await prisma.guardian.update({
+        where: { idGuardian: guardianFounded.idGuardian },
+        data: { 
+          firstName, 
+          lastName, 
+          email, 
+          phone, 
+          address 
+        },
       });
-      return res.status(200).json({ message: "Guardian updated successfully." });
+
+      return res.status(200).json({ 
+        message: "Guardian updated successfully.", 
+        updatedGuardian 
+      });
     } catch (error) {
       return res.status(500).json({
         message:
@@ -70,16 +103,24 @@ export class GuardianController {
     try {
       const { identification } = req.body as AddGuardianDTO;
 
-      const clinicFounded = await prisma.guardian.findUnique({ where: { identification } });
+      // Buscar el guardian y validar que esté activo
+      const guardianFounded = await prisma.guardian.findUnique({ 
+        where: { 
+          identification,
+          active: true 
+        } 
+      });
 
-      if (!clinicFounded) {
-        return res.status(404).json({ message: "Guardian not found." });
+      if (!guardianFounded) {
+        return res.status(404).json({ message: "Guardian not found or inactive." });
       }
 
+      // Borrado lógico
       await prisma.guardian.update({
-        where: { idGuardian: clinicFounded.idGuardian },
+        where: { idGuardian: guardianFounded.idGuardian },
         data: { active: false },
       });
+
       return res.status(200).json({ message: "Guardian deleted successfully." });
     } catch (error) {
       return res.status(500).json({

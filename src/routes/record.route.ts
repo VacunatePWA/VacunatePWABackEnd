@@ -9,6 +9,6 @@ const { addRecord, getAllRecords, updateRecord, deleteRecord } =
 router.get("/records", getAllRecords);
 router.post("/record", addRecord);
 router.put("/record", updateRecord);
-router.put("/record", deleteRecord);
+router.delete("/record", deleteRecord);
 
 export { router as recordRouter };

@@ -16,13 +16,16 @@
   },
   "dependencies": {
     "@prisma/client": "6.8.2",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "resend": "^4.6.0",
     "zod": "^3.25.39"
   },
   "scripts": {
     "dev": "bun --watch run ./src/index.ts",
-    "password": "bun run ./src/utils/passwordGenerate.ts"
+    "password": "bun run ./src/utils/passwordGenerate.ts",
+    "email": "bun run ./src/jobs/sendAlertEmail.ts"
   }
 }

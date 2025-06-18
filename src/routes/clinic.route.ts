@@ -1,11 +1,15 @@
 import { Router } from "express";
 import { ClinicController } from "../controllers/Clinic.controller.ts";
+import { validateAccess } from "../middlewares/auth.middleware";
 
 const router: Router = Router();
 
-const { addClinic, deleteClinic, getAllClinics, updateClinic } =
+router.use(validateAccess);
+
+const { addClinic, deleteClinic, getAllClinics, updateClinic, getClinicCount } =
   ClinicController;
 
+router.get("/clinics/count", getClinicCount);
 router.get("/clinics", getAllClinics);
 router.post("/clinic", addClinic);
 router.put("/clinic", updateClinic);

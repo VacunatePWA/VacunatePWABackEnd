@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { VaccineController } from "../controllers/Vaccine.controller.ts";
+import { validateAccess } from "../middlewares/auth.middleware";
 
 const router: Router = Router();
+
+router.use(validateAccess);
 
 const { addVaccine, deleteVaccine, getAllVaccines, updateVaccine } =
   VaccineController;

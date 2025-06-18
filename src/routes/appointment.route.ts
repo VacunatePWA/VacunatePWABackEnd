@@ -1,11 +1,15 @@
 import { Router } from "express";
 import { AppointmentController } from "../controllers/Appointment.controller.ts";
+import { validateAccess } from "../middlewares/auth.middleware";
 
 const router: Router = Router();
 
-const { addAppointment, deleteAppointment, getAllAppointments, updateAppointment } =
+router.use(validateAccess);
+
+const { addAppointment, deleteAppointment, getAllAppointments, updateAppointment, getAppointmentCount } =
   AppointmentController;
 
+router.get("/appointments/count", getAppointmentCount);
 router.get("/appointments", getAllAppointments);
 router.post("/appointment", addAppointment);
 router.put("/appointment", updateAppointment);

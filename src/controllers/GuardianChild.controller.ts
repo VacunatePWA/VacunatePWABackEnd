@@ -121,9 +121,8 @@ export class GuardianChildController {
         return res.status(404).json({ message: "Relation not found." });
       }
 
-      await prisma.guardianChild.update({
+      await prisma.guardianChild.delete({
         where: { idGuardianChild: relation.idGuardianChild },
-        data: { active: false },
       });
 
       return res.status(200).json({ message: "Relation deleted successfully." });

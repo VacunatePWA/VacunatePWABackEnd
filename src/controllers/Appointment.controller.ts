@@ -159,7 +159,6 @@ export class AppointmentController {
           userId: user.idUser,
           clinicId: clinic.idClinic,
           date,
-          active: true,
         },
       });
 
@@ -167,9 +166,8 @@ export class AppointmentController {
         return res.status(404).json({ message: "Appointment not found." });
       }
 
-      await prisma.appointment.update({
+      await prisma.appointment.delete({
         where: { idAppointment: appointment.idAppointment },
-        data: { active: false },
       });
 
       return res
@@ -179,6 +177,19 @@ export class AppointmentController {
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
+  static async getAppointmentCount(req: Request, res: Response): Promise<any> {
+    try {
+      const count = await prisma.appointment.count({
+        where: { active: true },
+      });
+      return res.status(200).json({ count });
+    } catch (error) {
+      return res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
       });
     }
   }

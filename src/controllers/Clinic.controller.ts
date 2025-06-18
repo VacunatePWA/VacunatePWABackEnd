@@ -70,21 +70,33 @@ export class ClinicController {
     try {
       const { name } = req.body as AddClinicDTO;
 
-      const clinicFounded = await prisma.clinic.findUnique({ where: { name } });
+      const clinicFound = await prisma.clinic.findUnique({ where: { name } });
 
-      if (!clinicFounded) {
+      if (!clinicFound) {
         return res.status(404).json({ message: "Clinic not found." });
       }
 
-      await prisma.clinic.update({
-        where: { idClinic: clinicFounded.idClinic },
-        data: { active: false },
+      await prisma.clinic.delete({
+        where: { idClinic: clinicFound.idClinic },
       });
       return res.status(200).json({ message: "Clinic deleted successfully." });
     } catch (error) {
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
+  static async getClinicCount(req: Request, res: Response): Promise<any> {
+    try {
+      const count = await prisma.clinic.count({
+        where: { active: true }
+      });
+      return res.status(200).json({ count });
+    } catch (error) {
+      return res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
       });
     }
   }

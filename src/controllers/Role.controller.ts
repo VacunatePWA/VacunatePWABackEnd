@@ -72,21 +72,35 @@ export class RoleController {
     try {
       const { name } = req.body as AddRoleDTO;
 
-      const roleFounded = await prisma.role.findUnique({ where: { name } });
+      const roleFound = await prisma.role.findUnique({ where: { name } });
 
-      if (!roleFounded) {
+      if (!roleFound) {
         return res.status(404).json({ message: "Role not found." });
       }
 
-      await prisma.role.update({
-        where: { idRole: roleFounded.idRole },
-        data: { active: false },
+      await prisma.role.delete({
+        where: { idRole: roleFound.idRole },
       });
       return res.status(200).json({ message: "Role deleted successfully." });
     } catch (error) {
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+  
+  static async getRoleById(req: Request, res: Response): Promise<any> {
+    try {
+      const { roleId } = req.params;
+      const role = await prisma.role.findUnique({ where: { idRole: roleId } });
+      if (!role) {
+        return res.status(404).json({ message: "Role not found." });
+      }
+      return res.status(200).json(role);
+    } catch (error) {
+      return res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
       });
     }
   }

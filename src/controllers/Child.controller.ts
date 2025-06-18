@@ -70,21 +70,33 @@ export class ChildController {
     try {
       const { identification } = req.body as AddChildDTO;
 
-      const clinicFounded = await prisma.child.findUnique({ where: { identification } });
+      const childFound = await prisma.child.findUnique({ where: { identification } });
 
-      if (!clinicFounded) {
+      if (!childFound) {
         return res.status(404).json({ message: "Child not found." });
       }
 
-      await prisma.child.update({
-        where: { idChild: clinicFounded.idChild },
-        data: { active: false },
+      await prisma.child.delete({
+        where: { idChild: childFound.idChild },
       });
       return res.status(200).json({ message: "Child deleted successfully." });
     } catch (error) {
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
+  static async getChildCount(req: Request, res: Response): Promise<any> {
+    try {
+      const count = await prisma.child.count({
+        where: { active: true }
+      });
+      return res.status(200).json({ count });
+    } catch (error) {
+      return res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
       });
     }
   }

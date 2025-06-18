@@ -175,6 +175,7 @@ model VaccineSchema {
   Doses           Int
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  active          Boolean? @default(true)
   vaccine         Vaccine  @relation(fields: [idVaccine], references: [idVaccine])
 }
 

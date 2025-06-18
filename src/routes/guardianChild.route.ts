@@ -1,9 +1,12 @@
 import { Router } from "express";
 import { GuardianChildController } from "../controllers/GuardianChild.controller.ts";
+import { validateAccess } from "../middlewares/auth.middleware";
 
 const router: Router = Router();
 
-const {addRelation, deleteRelation, getAllRelations, updateRelation } = GuardianChildController
+router.use(validateAccess);
+
+const { addRelation, deleteRelation, getAllRelations, updateRelation } = GuardianChildController;
 
 router.get("/relations", getAllRelations);
 router.post("/relation", addRelation);

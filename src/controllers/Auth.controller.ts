@@ -110,7 +110,6 @@ export class AuthController {
       res.cookie("token", token, { httpOnly: false, secure: false });
 
       return res.sendStatus(202);
-
     } catch (error) {
       return res
         .status(500)
@@ -121,5 +120,27 @@ export class AuthController {
   static logOut(req: Request, res: Response): any {
     res.cookie("token", "");
     res.sendStatus(200);
+  }
+
+  static async profile(req: Request, res: Response): Promise<any> {
+    try {
+
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const user = await prisma.user.findUnique({
+        where: { idUser: userId },
+      });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const { password, ...userProfile } = user;
+      return res.status(200).json({ user: userProfile });
+    } catch (error) {
+      return res.status(500).json({
+        message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
   }
 }

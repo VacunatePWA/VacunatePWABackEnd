@@ -70,15 +70,14 @@ export class GuardianController {
     try {
       const { identification } = req.body as AddGuardianDTO;
 
-      const clinicFounded = await prisma.guardian.findUnique({ where: { identification } });
+      const guardianFound = await prisma.guardian.findUnique({ where: { identification } });
 
-      if (!clinicFounded) {
+      if (!guardianFound) {
         return res.status(404).json({ message: "Guardian not found." });
       }
 
-      await prisma.guardian.update({
-        where: { idGuardian: clinicFounded.idGuardian },
-        data: { active: false },
+      await prisma.guardian.delete({
+        where: { idGuardian: guardianFound.idGuardian },
       });
       return res.status(200).json({ message: "Guardian deleted successfully." });
     } catch (error) {

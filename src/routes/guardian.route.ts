@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { GuardianController } from "../controllers/Guardian.controller.ts";
+import { validateAccess } from "../middlewares/auth.middleware";
 
 const router: Router = Router();
+
+router.use(validateAccess);
 
 const { addGuardian, deleteGuardian, getAllGuardians, updateGuardian } =
   GuardianController;

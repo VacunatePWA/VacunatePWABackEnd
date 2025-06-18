@@ -70,17 +70,16 @@ export class VaccineController {
     try {
       const { name } = req.body as AddVaccineDTO;
 
-      const vaccineFounded = await prisma.vaccine.findUnique({ where: { name } });
+      const vaccineFound = await prisma.vaccine.findUnique({ where: { name } });
 
-      if (!vaccineFounded) {
-        return res.status(404).json({ message: "vaccine not found." });
+      if (!vaccineFound) {
+        return res.status(404).json({ message: "Vaccine not found." });
       }
 
-      await prisma.vaccine.update({
-        where: { idVaccine: vaccineFounded.idVaccine },
-        data: { active: false },
+      await prisma.vaccine.delete({
+        where: { idVaccine: vaccineFound.idVaccine },
       });
-      return res.status(200).json({ message: "vaccine deleted successfully." });
+      return res.status(200).json({ message: "Vaccine deleted successfully." });
     } catch (error) {
       return res.status(500).json({
         message:

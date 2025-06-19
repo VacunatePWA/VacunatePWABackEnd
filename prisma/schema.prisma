@@ -10,7 +10,7 @@ datasource db {
 model User {
   supervisorId       String?            @db.Uuid
   roleId             String             @db.Uuid
-  identification     String             @unique
+  identification     String
   password           String
   phone              String
   email              String
@@ -26,6 +26,8 @@ model User {
   role               Role               @relation(fields: [roleId], references: [idRole])
   supervisor         User?              @relation("UserSupervisor", fields: [supervisorId], references: [idUser])
   supervisees        User[]             @relation("UserSupervisor")
+  guardianChildren   GuardianChild[]    @relation("UserGuardianChildren")
+  userClinics        UserClinic[]
 
   @@map("users")
 }
@@ -42,27 +44,10 @@ model Role {
   @@map("roles")
 }
 
-model Guardian {
-  firstName          String
-  lastName           String
-  identification     String             @unique
-  email              String             @unique
-  phone              String
-  address            String
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  active             Boolean            @default(true)
-  idGuardian         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  identificationType IdentificationType
-  guardianChildren   GuardianChild[]
-
-  @@map("guardians")
-}
-
 model Child {
   firstName          String
   lastName           String
-  identification     String             @unique
+  identification     String
   birthDate          DateTime
   gender             Gender
   nationality        String
@@ -89,14 +74,14 @@ model GuardianChild {
   relationship    Relationship
   assignedAt      DateTime     @default(now())
   child           Child        @relation(fields: [childId], references: [idChild])
-  guardian        Guardian     @relation(fields: [guardianId], references: [idGuardian])
+  guardian        User         @relation(fields: [guardianId], references: [idUser], name: "UserGuardianChildren")
 
   @@unique([guardianId, childId])
   @@map("guardian_child")
 }
 
 model Vaccine {
-  name          String          @unique
+  name          String
   brand         String
   description   String
   createdAt     DateTime        @default(now())
@@ -110,7 +95,7 @@ model Vaccine {
 }
 
 model Clinic {
-  name         String        @unique
+  name         String
   shortName    String
   phone        String
   director     String
@@ -126,6 +111,7 @@ model Clinic {
   latitude     Float         @db.Real
   longitude    Float         @db.Real
   appointments Appointment[]
+  userClinics  UserClinic[]
 
   @@map("clinics")
 }
@@ -179,6 +165,19 @@ model VaccineSchema {
   vaccine         Vaccine  @relation(fields: [idVaccine], references: [idVaccine])
 }
 
+model UserClinic {
+  idUserClinic String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @db.Uuid
+  clinicId     String   @db.Uuid
+  active       Boolean  @default(true)
+  assignedAt   DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [idUser])
+  clinic       Clinic   @relation(fields: [clinicId], references: [idClinic])
+
+  @@unique([userId, clinicId])
+  @@map("user_clinics")
+}
+
 enum IdentificationType {
   PASSPORT
   IDCARD
@@ -201,3 +200,7 @@ enum Relationship {
   FATHER
   TUTOR
 }
+
+// Modelos y enums cubren:
+// - User, Role, Child, GuardianChild, Vaccine, Clinic, Record, Appointment, VaccineSchema
+// - Enums: IdentificationType, AppointmentState, Gender, Relationship

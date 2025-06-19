@@ -5,18 +5,19 @@ import cookieParser from "cookie-parser";
 import { authRouter } from "./routes/auth.route";
 import { roleRouter } from "./routes/role.route";
 import { vaccineRouter } from "./routes/vaccine.route";
-import { guardianRouter } from "./routes/guardian.route";
 import { clinicRouter } from "./routes/clinic.route";
 import { childRouter } from "./routes/child.route";
 import { recordRouter } from "./routes/record.route";
 import { appointmentRouter } from "./routes/appointment.route";
 import { vaccineSchemaRouter } from "./routes/vaccineSchema.route";
-import { GuardianChildRouter } from "./routes/guardianChild.route";
+import { userChildRouter } from "./routes/userChild.route";
+import vaccinationStatusRouter from "./routes/vaccinationStatus.route";
+import userClinicRouter from "./routes/userClinic.route";
 
 const app = express();
 
 //Allowed origin to deploy frontEnd in localhost
-const trueOrigin: StaticOrigin = ["http://localhost:5173"];
+const trueOrigin: StaticOrigin = ["http://localhost:5173", "http://localhost:5174"];
 
 //CORS configuration
 const corsOptions: CorsOptions = {
@@ -33,13 +34,15 @@ app.use(cookieParser());
 app.use("/api", authRouter); //Authentication
 app.use("/api", roleRouter); //Roles
 app.use("/api", vaccineRouter); //Vaccines
-app.use("/api", guardianRouter); //Guardians
 app.use("/api", clinicRouter); //Clinics
 app.use("/api", childRouter); //Childs
 app.use("/api", recordRouter); //Records
 app.use("/api", appointmentRouter); //Appointments
 app.use("/api", vaccineSchemaRouter); //VaccineSchema
-app.use("/api", GuardianChildRouter); //GuardianChild
+app.use("/api", userChildRouter); //User-Child relations
+app.use("/api", vaccinationStatusRouter); // Vaccination status endpoint
+app.use("/api", userClinicRouter); // User-Clinic assignments
+// app.use("/api", ...): monta todas las rutas de recursos principales
 
 app.get("/", (req, res) => {
   res.send("Hola mundo");

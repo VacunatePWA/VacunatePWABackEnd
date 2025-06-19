@@ -23,11 +23,11 @@ export class ChildController {
     try {
       const { firstName, lastName, identificationType, identification, birthDate, gender, nationality, city, municipality } = req.body as AddChildDTO;
 
-      const clinicFounded = await prisma.child.findUnique({ where: { identification } });
-      if (clinicFounded) {
+      const childFounded = await prisma.child.findFirst({ where: { identification, active: true } });
+      if (childFounded) {
         return res
           .status(409)
-          .json({ message: `Child "${identification}" already exists.` });
+          .json({ message: `Child "${identification}" already exists and is active.` });
       }
 
       const newChild = await prisma.child.create({
@@ -47,14 +47,14 @@ export class ChildController {
     const { firstName, lastName, identificationType, identification, birthDate, gender, nationality, city, municipality } = req.body as AddChildDTO;
 
     try {
-      const clinicFounded = await prisma.child.findUnique({ where: { identification } });
+      const childFounded = await prisma.child.findFirst({ where: { identification, active: true } });
 
-      if (!clinicFounded) {
+      if (!childFounded) {
         return res.status(404).json({ message: "Child not found." });
       }
 
       await prisma.child.update({
-        where: { idChild: clinicFounded.idChild },
+        where: { idChild: childFounded.idChild },
         data: { firstName, lastName, gender, nationality, city, municipality },
       });
       return res.status(200).json({ message: "Child updated successfully." });
@@ -70,16 +70,17 @@ export class ChildController {
     try {
       const { identification } = req.body as AddChildDTO;
 
-      const childFound = await prisma.child.findUnique({ where: { identification } });
+      const childFound = await prisma.child.findFirst({ where: { identification, active: true } });
 
       if (!childFound) {
         return res.status(404).json({ message: "Child not found." });
       }
 
-      await prisma.child.delete({
+      await prisma.child.update({
         where: { idChild: childFound.idChild },
+        data: { active: false },
       });
-      return res.status(200).json({ message: "Child deleted successfully." });
+      return res.status(200).json({ message: "Child deleted (set inactive)." });
     } catch (error) {
       return res.status(500).json({
         message:

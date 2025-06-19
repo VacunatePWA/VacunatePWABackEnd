@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { RoleController } from "../controllers/Role.controller.ts";
+import { RoleController } from "../controllers/Role.controller";
 import { validateAccess } from "../middlewares/auth.middleware";
 
 const router: Router = Router();

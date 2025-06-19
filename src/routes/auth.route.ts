@@ -6,12 +6,16 @@ import { validateAccess } from "../middlewares/auth.middleware";
 
 const router: Router = Router();
 
-const { register, logIn, logOut, profile } = AuthController;
+const { register, logIn, logOut, profile, getAllUsers, deleteUser} = AuthController;
 
 router.post("/register", validateSchema(userSchema), register);
 router.post("/login", logIn);
 router.post("/logout",validateAccess, logOut);
 router.get("/profile",validateAccess, profile);
+router.get("/users",validateAccess, getAllUsers);
+router.delete("/user",validateAccess, deleteUser);
+
+
 
 export { router as authRouter };
 

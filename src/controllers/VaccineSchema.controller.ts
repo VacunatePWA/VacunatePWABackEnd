@@ -3,6 +3,8 @@ import { AddVaccineSchemaDTO } from "../DTOs/AddVaccineSchemaDTO";
 import prisma from "../db/prisma";
 
 export class VaccineSchemaController {
+  // Métodos: getAllVaccineSchemas, addVaccineSchema, updateVaccineSchema, deleteVaccineSchema
+
   static async getAllVaccineSchemas(req: Request, res: Response): Promise<any> {
     try {
       const vaccineSchemas = await prisma.vaccineSchema.findMany({
@@ -21,8 +23,8 @@ export class VaccineSchemaController {
     try {
       const { name, doses, description, age, vaccineName } = req.body as AddVaccineSchemaDTO;
 
-      const vaccine = await prisma.vaccine.findUnique({
-        where: { name: vaccineName },
+      const vaccine = await prisma.vaccine.findFirst({
+        where: { name: vaccineName, active: true },
       });
 
       if (!vaccine) {
@@ -51,8 +53,8 @@ export class VaccineSchemaController {
     try {
       const { name, description, vaccineName } = req.body as AddVaccineSchemaDTO;
 
-      const vaccine = await prisma.vaccine.findUnique({
-        where: { name: vaccineName },
+      const vaccine = await prisma.vaccine.findFirst({
+        where: { name: vaccineName, active: true },
       });
 
       if (!vaccine) {
@@ -81,6 +83,31 @@ export class VaccineSchemaController {
     } catch (error) {
       return res.status(500).json({
         message: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
+  static async deleteVaccineSchema(req: Request, res: Response): Promise<any> {
+    try {
+      const { idVaccineSchema } = req.body;
+      
+      const schema = await prisma.vaccineSchema.findFirst({ 
+        where: { idVaccineSchema, active: true } 
+      });
+      
+      if (!schema) {
+        return res.status(404).json({ message: "VaccineSchema not found." });
+      }
+      
+      await prisma.vaccineSchema.update({
+        where: { idVaccineSchema: schema.idVaccineSchema },
+        data: { active: false },
+      });
+      
+      return res.status(200).json({ message: "VaccineSchema deleted (set inactive)." });
+    } catch (error) {
+      return res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Internal server error" 
       });
     }
   }

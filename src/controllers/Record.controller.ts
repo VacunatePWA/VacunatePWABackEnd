@@ -28,18 +28,18 @@ export class RecordController {
         notes,
       } = req.body as AddRecordDTO;
 
-      const child = await prisma.child.findUnique({
-        where: { identification: identificationChild },
+      const child = await prisma.child.findFirst({
+        where: { identification: identificationChild, active: true },
       });
       if (!child) return res.status(404).json({ message: "Child not found" });
 
-      const user = await prisma.user.findUnique({
-        where: { identification: identificationUser },
+      const user = await prisma.user.findFirst({
+        where: { identification: identificationUser, active: true },
       });
       if (!user) return res.status(404).json({ message: "User not found" });
 
-      const vaccine = await prisma.vaccine.findUnique({
-        where: { name: vaccineName },
+      const vaccine = await prisma.vaccine.findFirst({
+        where: { name: vaccineName, active: true },
       });
       if (!vaccine) return res.status(404).json({ message: "Vaccine not found" });
 
@@ -72,18 +72,18 @@ export class RecordController {
         notes,
       } = req.body as AddRecordDTO;
 
-      const child = await prisma.child.findUnique({
-        where: { identification: identificationChild },
+      const child = await prisma.child.findFirst({
+        where: { identification: identificationChild, active: true },
       });
       if (!child) return res.status(404).json({ message: "Child not found" });
 
-      const user = await prisma.user.findUnique({
-        where: { identification: identificationUser },
+      const user = await prisma.user.findFirst({
+        where: { identification: identificationUser, active: true },
       });
       if (!user) return res.status(404).json({ message: "User not found" });
 
-      const vaccine = await prisma.vaccine.findUnique({
-        where: { name: vaccineName },
+      const vaccine = await prisma.vaccine.findFirst({
+        where: { name: vaccineName, active: true },
       });
       if (!vaccine) return res.status(404).json({ message: "Vaccine not found" });
 
@@ -114,6 +114,36 @@ export class RecordController {
         message:
           error instanceof Error ? error.message : "Internal server error",
       });
+    }
+  }
+
+  static async deleteRecord(req: Request, res: Response): Promise<any> {
+    try {
+      const { identificationChild, identificationUser, vaccineName } = req.body as AddRecordDTO;
+      const child = await prisma.child.findFirst({ where: { identification: identificationChild, active: true } });
+      if (!child) return res.status(404).json({ message: "Child not found" });
+      const user = await prisma.user.findFirst({ where: { identification: identificationUser, active: true } });
+      if (!user) return res.status(404).json({ message: "User not found" });
+      const vaccine = await prisma.vaccine.findFirst({ where: { name: vaccineName, active: true } });
+      if (!vaccine) return res.status(404).json({ message: "Vaccine not found" });
+      const record = await prisma.record.findFirst({
+        where: {
+          childId: child.idChild,
+          userId: user.idUser,
+          vaccineId: vaccine.idVaccine,
+          active: true,
+        },
+      });
+      if (!record) {
+        return res.status(404).json({ message: "Record not found." });
+      }
+      await prisma.record.update({
+        where: { idRecord: record.idRecord },
+        data: { active: false },
+      });
+      return res.status(200).json({ message: "Record deleted (set inactive)." });
+    } catch (error) {
+      return res.status(500).json({ message: error instanceof Error ? error.message : "Internal server error" });
     }
   }
 }

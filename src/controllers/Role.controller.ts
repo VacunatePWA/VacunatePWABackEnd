@@ -25,11 +25,13 @@ export class RoleController {
     try {
       const { name, description } = req.body as AddRoleDTO;
 
-      const roleFounded = await prisma.role.findUnique({ where: { name } });
+      const roleFounded = await prisma.role.findFirst({
+        where: { name, active: true },
+      });
       if (roleFounded) {
         return res
           .status(409)
-          .json({ message: `Role "${name}" already exists.` });
+          .json({ message: `Role "${name}" already exists and is active.` });
       }
 
       const newRole = await prisma.role.create({
@@ -49,7 +51,9 @@ export class RoleController {
     const { name, description } = req.body as AddRoleDTO;
 
     try {
-      const roleFounded = await prisma.role.findUnique({ where: { name } });
+      const roleFounded = await prisma.role.findFirst({
+        where: { name, active: true },
+      });
 
       if (!roleFounded) {
         return res.status(404).json({ message: "Role not found." });
@@ -72,16 +76,19 @@ export class RoleController {
     try {
       const { name } = req.body as AddRoleDTO;
 
-      const roleFound = await prisma.role.findUnique({ where: { name } });
+      const roleFound = await prisma.role.findFirst({
+        where: { name, active: true },
+      });
 
       if (!roleFound) {
         return res.status(404).json({ message: "Role not found." });
       }
 
-      await prisma.role.delete({
+      await prisma.role.update({
         where: { idRole: roleFound.idRole },
+        data: { active: false },
       });
-      return res.status(200).json({ message: "Role deleted successfully." });
+      return res.status(200).json({ message: "Role deleted (set inactive)." });
     } catch (error) {
       return res.status(500).json({
         message:

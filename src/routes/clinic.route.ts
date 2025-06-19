@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { ClinicController } from "../controllers/Clinic.controller.ts";
+import { ClinicController } from "../controllers/Clinic.controller";
 import { validateAccess } from "../middlewares/auth.middleware";
 
 const router: Router = Router();
 
 router.use(validateAccess);
 
+// CRUD de clínicas y conteo
 const { addClinic, deleteClinic, getAllClinics, updateClinic, getClinicCount } =
   ClinicController;
 

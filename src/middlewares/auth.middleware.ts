@@ -9,10 +9,16 @@ export const validateAccess = (
   res: Response,
   next: NextFunction
 ): any => {
+  console.log('=== AUTH MIDDLEWARE DEBUG ===');
+  console.log('Cookies received:', req.cookies);
+  console.log('Headers cookie:', req.headers.cookie);
+  
   if (!JWT_KEY)
     return res.status(501).json({ message: "JWT_KEY is not defined in .env file" });
 
   const { token } = req.cookies as CookiesDTO;
+  console.log('Token extracted from cookies:', token ? token.substring(0, 20) + '...' : 'undefined');
+  
   if (!token) return res.status(401).json({ message: "Invalid credentials" });
 
   const decoded = jwt.decode(token);
@@ -32,4 +38,7 @@ export const validateAccess = (
     next();
   });
 };
+
+// Alias para compatibilidad
+export const authMiddleware = validateAccess;
 

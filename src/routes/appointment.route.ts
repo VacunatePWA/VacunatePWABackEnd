@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { AppointmentController } from "../controllers/Appointment.controller.ts";
+import { AppointmentController } from "../controllers/Appointment.controller";
 import { validateAccess } from "../middlewares/auth.middleware";
 
 const router: Router = Router();
 
 router.use(validateAccess);
 
+// CRUD de citas y conteo
 const { addAppointment, deleteAppointment, getAllAppointments, updateAppointment, getAppointmentCount } =
   AppointmentController;
 

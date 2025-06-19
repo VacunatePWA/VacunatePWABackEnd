@@ -5,6 +5,23 @@ import prisma from "../db/prisma";
 import jwt from "jsonwebtoken";
 
 export class AuthController {
+
+  static async getAllUsers(req: Request, res: Response): Promise<any> {
+    try {
+      const Vaccines = await prisma.user.findMany({
+        where: { active: true },
+
+        orderBy: { createdAt: "desc" },
+      });
+      return res.status(200).json(Vaccines);
+    } catch (error) {
+      return res.status(500).json({
+        message:
+          error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
   static async register(req: Request, res: Response): Promise<any> {
     try {
       const {
@@ -19,12 +36,12 @@ export class AuthController {
         supervisorIdentification,
       } = req.body as RegisterUserDTO;
 
-      const userFounded = await prisma.user.findUnique({
-        where: { identification },
+      const userFounded = await prisma.user.findFirst({
+        where: { identification, active: true },
       });
 
       if (userFounded) {
-        return res.status(409).json({ message: "User is registered" });
+        return res.status(409).json({ message: "User is registered and active" });
       }
 
       let supervisorId: string | null = null;
@@ -86,8 +103,8 @@ export class AuthController {
     const { identification, password } = req.body as LogInUserDTO;
 
     try {
-      const userFounded = await prisma.user.findUnique({
-        where: { identification },
+      const userFounded = await prisma.user.findFirst({
+        where: { identification, active: true },
       });
 
       if (!userFounded) {
@@ -107,13 +124,43 @@ export class AuthController {
         expiresIn: "1h",
       });
 
+      console.log('=== LOGIN DEBUG ===');
+      console.log('Setting cookie with token:', token.substring(0, 20) + '...');
+      
       res.cookie("token", token, { httpOnly: false, secure: false });
 
+      console.log('Cookie set successfully');
       return res.sendStatus(202);
     } catch (error) {
       return res
         .status(500)
         .json(error instanceof Error ? error.message : "Internal server error");
+    }
+  }
+
+  
+static async deleteUser(req: Request, res: Response): Promise<any> {
+    try {
+      const { idUser } = req.body;
+
+      const userFound = await prisma.user.findFirst({
+        where: { idUser, active: true },
+      });
+
+      if (!userFound) {
+        return res.status(404).json({ message: "User not found." });
+      }
+
+      await prisma.user.update({
+        where: { idUser: userFound.idUser },
+        data: { active: false },
+      });
+      return res.status(200).json({ message: "User deleted (set inactive)." });
+    } catch (error) {
+      return res.status(500).json({
+        message:
+          error instanceof Error ? error.message : "Internal server error",
+      });
     }
   }
 
@@ -131,12 +178,44 @@ export class AuthController {
       }
       const user = await prisma.user.findUnique({
         where: { idUser: userId },
+        include: {
+          role: {
+            select: {
+              idRole: true,
+              name: true
+            }
+          },
+          userClinics: {
+            where: { active: true },
+            include: {
+              clinic: {
+                select: {
+                  idClinic: true,
+                  name: true,
+                  street: true,
+                  city: true,
+                  municipality: true,
+                  phone: true
+                }
+              }
+            }
+          }
+        }
       });
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       const { password, ...userProfile } = user;
-      return res.status(200).json({ user: userProfile });
+      
+      // Extraer solo los centros del array de userClinics
+      const clinics = (user as any).userClinics?.map((uc: any) => uc.clinic) || [];
+      
+      return res.status(200).json({ 
+        user: {
+          ...userProfile,
+          assignedClinics: clinics
+        }
+      });
     } catch (error) {
       return res.status(500).json({
         message: error instanceof Error ? error.message : "Internal server error",

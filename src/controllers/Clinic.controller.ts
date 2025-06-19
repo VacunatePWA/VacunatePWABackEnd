@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AddClinicDTO } from "../DTOs/AddClinicDTO";
 import prisma from "../db/prisma";
 
+// Métodos: getAllClinics, addClinic, updateClinic, deleteClinic, getClinicCount
 export class ClinicController {
   static async getAllClinics(req: Request, res: Response): Promise<any> {
     try {
@@ -23,11 +24,11 @@ export class ClinicController {
     try {
       const { name, shortName, city, municipality, street, phone, director, website, email, latitude, longitude } = req.body as AddClinicDTO;
 
-      const clinicFounded = await prisma.clinic.findUnique({ where: { name } });
+      const clinicFounded = await prisma.clinic.findFirst({ where: { name, active: true } });
       if (clinicFounded) {
         return res
           .status(409)
-          .json({ message: `Clinic "${name}" already exists.` });
+          .json({ message: `Clinic "${name}" already exists and is active.` });
       }
 
       const newclinic = await prisma.clinic.create({
@@ -47,7 +48,7 @@ export class ClinicController {
     const { name, shortName, city, municipality, street, phone, director, website, email, latitude, longitude } = req.body as AddClinicDTO;
 
     try {
-      const clinicFounded = await prisma.clinic.findUnique({ where: { name } });
+      const clinicFounded = await prisma.clinic.findFirst({ where: { name, active: true } });
 
       if (!clinicFounded) {
         return res.status(404).json({ message: "Clinic not found." });
@@ -70,16 +71,17 @@ export class ClinicController {
     try {
       const { name } = req.body as AddClinicDTO;
 
-      const clinicFound = await prisma.clinic.findUnique({ where: { name } });
+      const clinicFound = await prisma.clinic.findFirst({ where: { name, active: true } });
 
       if (!clinicFound) {
         return res.status(404).json({ message: "Clinic not found." });
       }
 
-      await prisma.clinic.delete({
+      await prisma.clinic.update({
         where: { idClinic: clinicFound.idClinic },
+        data: { active: false },
       });
-      return res.status(200).json({ message: "Clinic deleted successfully." });
+      return res.status(200).json({ message: "Clinic deleted (set inactive)." });
     } catch (error) {
       return res.status(500).json({
         message:

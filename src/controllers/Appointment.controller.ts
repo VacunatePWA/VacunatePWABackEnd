@@ -26,7 +26,7 @@ export class AppointmentController {
       const {
         date,
         notes,
-        clinicName,
+        clinicId,
         identificationChild,
         identificationUser,
       } = req.body as AddAppointmentDTO;
@@ -45,8 +45,8 @@ export class AppointmentController {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const clinic = await prisma.clinic.findFirst({
-        where: { name: clinicName, active: true },
+      const clinic = await prisma.clinic.findUnique({
+        where: { idClinic: clinicId, active: true },
       });
       if (!clinic) {
         return res.status(404).json({ message: "Clinic not found" });
@@ -89,50 +89,44 @@ export class AppointmentController {
 
   static async updateAppointment(req: Request, res: Response): Promise<any> {
     const {
+      idAppointment,
       date,
       notes,
       state,
-      clinicName,
-      identificationChild,
-      identificationUser,
-    } = req.body as AddAppointmentDTO;
+      clinicId
+    } = req.body;
 
     try {
-      const child = await prisma.child.findFirst({
-        where: { identification: identificationChild, active: true },
-      });
-      if (!child) return res.status(404).json({ message: "Child not found" });
+      if (!idAppointment) {
+        return res.status(400).json({ message: "idAppointment is required" });
+      }
 
-      const user = await prisma.user.findFirst({
-        where: { identification: identificationUser, active: true },
-      });
-      if (!user) return res.status(404).json({ message: "User not found" });
-
-      const clinic = await prisma.clinic.findFirst({
-        where: { name: clinicName, active: true },
-      });
-      if (!clinic) return res.status(404).json({ message: "Clinic not found" });
-
-      const appointment = await prisma.appointment.findFirst({
-        where: {
-          childId: child.idChild,
-          userId: user.idUser,
-          clinicId: clinic.idClinic,
-          date,
-          active: true,
-        },
+      const appointment = await prisma.appointment.findUnique({
+        where: { idAppointment },
       });
 
-      if (!appointment) {
+      if (!appointment || !appointment.active) {
         return res.status(404).json({ message: "Appointment not found" });
       }
 
+      let newClinicId = appointment.clinicId;
+      if (clinicId && clinicId !== appointment.clinicId) {
+        const clinic = await prisma.clinic.findUnique({
+          where: { idClinic: clinicId, active: true },
+        });
+        if (!clinic) {
+          return res.status(404).json({ message: "Clinic not found" });
+        }
+        newClinicId = clinicId;
+      }
+
       const updatedAppointment = await prisma.appointment.update({
-        where: { idAppointment: appointment.idAppointment },
+        where: { idAppointment },
         data: {
           notes: notes ?? appointment.notes,
           state: state ?? appointment.state,
           date: date ?? appointment.date,
+          clinicId: newClinicId,
         },
       });
 
@@ -150,40 +144,22 @@ export class AppointmentController {
 
   static async deleteAppointment(req: Request, res: Response): Promise<any> {
     try {
-      const { date, identificationChild, identificationUser, clinicName } =
-        req.body as AddAppointmentDTO;
+      const { idAppointment } = req.body;
 
-      const child = await prisma.child.findFirst({
-        where: { identification: identificationChild, active: true },
-      });
-      if (!child) return res.status(404).json({ message: "Child not found" });
+      if (!idAppointment) {
+        return res.status(400).json({ message: "idAppointment is required" });
+      }
 
-      const user = await prisma.user.findFirst({
-        where: { identification: identificationUser, active: true },
-      });
-      if (!user) return res.status(404).json({ message: "User not found" });
-
-      const clinic = await prisma.clinic.findFirst({
-        where: { name: clinicName, active: true },
-      });
-      if (!clinic) return res.status(404).json({ message: "Clinic not found" });
-
-      const appointment = await prisma.appointment.findFirst({
-        where: {
-          childId: child.idChild,
-          userId: user.idUser,
-          clinicId: clinic.idClinic,
-          date,
-          active: true,
-        },
+      const appointment = await prisma.appointment.findUnique({
+        where: { idAppointment },
       });
 
-      if (!appointment) {
+      if (!appointment || !appointment.active) {
         return res.status(404).json({ message: "Appointment not found." });
       }
 
       await prisma.appointment.update({
-        where: { idAppointment: appointment.idAppointment },
+        where: { idAppointment },
         data: { active: false },
       });
 

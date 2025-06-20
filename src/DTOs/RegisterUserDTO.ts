@@ -10,4 +10,5 @@ export interface RegisterUserDTO {
   email: string;
   supervisorIdentification?: string;
   role: string;
+  idClinic?: string;
 }

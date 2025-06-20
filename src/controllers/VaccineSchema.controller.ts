@@ -8,11 +8,16 @@ export class VaccineSchemaController {
   static async getAllVaccineSchemas(req: Request, res: Response): Promise<any> {
     try {
       const vaccineSchemas = await prisma.vaccineSchema.findMany({
+        where: { active: true },
         orderBy: { createdAt: "desc" },
         include: { vaccine: true },
       });
-      return res.status(200).json(vaccineSchemas);
+      return res.status(200).json({
+        message: "Vaccine schemas retrieved successfully",
+        data: vaccineSchemas
+      });
     } catch (error) {
+      console.error('Error getting vaccine schemas:', error);
       return res.status(500).json({
         message: error instanceof Error ? error.message : "Internal server error",
       });
@@ -41,7 +46,10 @@ export class VaccineSchemaController {
         },
       });
 
-      return res.status(201).json(newVaccineSchema);
+      return res.status(201).json({
+        message: "Vaccine schema created successfully",
+        data: newVaccineSchema
+      });
     } catch (error) {
       return res.status(500).json({
         message: error instanceof Error ? error.message : "Internal server error",
@@ -91,21 +99,33 @@ export class VaccineSchemaController {
     try {
       const { idVaccineSchema } = req.body;
       
-      const schema = await prisma.vaccineSchema.findFirst({ 
-        where: { idVaccineSchema, active: true } 
+      if (!idVaccineSchema) {
+        return res.status(400).json({ message: "idVaccineSchema is required." });
+      }
+      
+      const schema = await prisma.vaccineSchema.findUnique({ 
+        where: { idVaccineSchema } 
       });
       
       if (!schema) {
         return res.status(404).json({ message: "VaccineSchema not found." });
       }
       
+      if (schema.active === false) {
+        return res.status(400).json({ message: "VaccineSchema is already inactive." });
+      }
+      
       await prisma.vaccineSchema.update({
-        where: { idVaccineSchema: schema.idVaccineSchema },
+        where: { idVaccineSchema },
         data: { active: false },
       });
       
-      return res.status(200).json({ message: "VaccineSchema deleted (set inactive)." });
+      return res.status(200).json({ 
+        message: "VaccineSchema deleted successfully.",
+        data: { idVaccineSchema }
+      });
     } catch (error) {
+      console.error('Error deleting vaccine schema:', error);
       return res.status(500).json({ 
         message: error instanceof Error ? error.message : "Internal server error" 
       });

@@ -6,13 +6,18 @@ const router: Router = Router();
 
 router.use(validateAccess);
 
-const { addChild, deleteChild, getAllChilds, updateChild, getChildCount } =
+const { addChild, deleteChild, getAllChilds, updateChild, getChildCount, getMyChildren, getVaccinationStatus, generateVaccinationCard, createChildWithTutor, updateChildWithTutor } =
   ChildController;
 
 router.get("/childs/count", getChildCount);
 router.get("/children", getAllChilds);
+router.get("/children/my-children", getMyChildren);
+router.get("/children/:childId/vaccination-status", getVaccinationStatus);
+router.get("/children/:childId/vaccination-card", generateVaccinationCard);
 router.post("/child", addChild);
+router.post("/children/with-tutor", createChildWithTutor);
 router.put("/child", updateChild);
+router.put("/children/with-tutor", updateChildWithTutor);
 router.delete("/child", deleteChild);
 
 export { router as childRouter };

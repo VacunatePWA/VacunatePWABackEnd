@@ -11,13 +11,14 @@ import { recordRouter } from "./routes/record.route";
 import { appointmentRouter } from "./routes/appointment.route";
 import { vaccineSchemaRouter } from "./routes/vaccineSchema.route";
 import { userChildRouter } from "./routes/userChild.route";
+import { guardianRouter } from "./routes/guardian.route";
 import vaccinationStatusRouter from "./routes/vaccinationStatus.route";
 import userClinicRouter from "./routes/userClinic.route";
 
 const app = express();
 
 //Allowed origin to deploy frontEnd in localhost
-const trueOrigin: StaticOrigin = ["http://localhost:5173", "http://localhost:5174"];
+const trueOrigin: StaticOrigin = ["http://localhost:5173", "http://localhost:5174", "http://10.0.0.85:5173/"];
 
 //CORS configuration
 const corsOptions: CorsOptions = {
@@ -40,6 +41,7 @@ app.use("/api", recordRouter); //Records
 app.use("/api", appointmentRouter); //Appointments
 app.use("/api", vaccineSchemaRouter); //VaccineSchema
 app.use("/api", userChildRouter); //User-Child relations
+app.use("/api", guardianRouter); //Guardians/Tutors
 app.use("/api", vaccinationStatusRouter); // Vaccination status endpoint
 app.use("/api", userClinicRouter); // User-Clinic assignments
 // app.use("/api", ...): monta todas las rutas de recursos principales

@@ -34,6 +34,7 @@ export class AuthController {
         role,
         email,
         supervisorIdentification,
+        idClinic,
       } = req.body as RegisterUserDTO;
 
       const userFounded = await prisma.user.findFirst({
@@ -83,7 +84,21 @@ export class AuthController {
         },
       });
 
-      console.log(newUser);
+      // Si es doctor o enfermero y se proporcionó una clínica, crear la asignación
+      if ((role === 'Doctor' || role === 'Enfermero') && idClinic) {
+        try {
+          await prisma.userClinic.create({
+            data: {
+              idUser: newUser.idUser,
+              idClinic: idClinic,
+            },
+          });
+        } catch (clinicError) {
+          console.error('Error asignando clínica al usuario:', clinicError);
+          // No fallar el registro por esto, solo logear el error
+        }
+      }
+
       return res.status(201).json({ message: "User registered" });
     } catch (error) {
       return res
@@ -124,12 +139,8 @@ export class AuthController {
         expiresIn: "1h",
       });
 
-      console.log('=== LOGIN DEBUG ===');
-      console.log('Setting cookie with token:', token.substring(0, 20) + '...');
-      
       res.cookie("token", token, { httpOnly: false, secure: false });
 
-      console.log('Cookie set successfully');
       return res.sendStatus(202);
     } catch (error) {
       return res

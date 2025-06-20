@@ -5,6 +5,6 @@ export interface AddAppointmentDTO {
   notes : string;
   state: AppointmentState;
   identificationChild:string;
-  clinicName:string;
+  clinicId:string;
   identificationUser:string;
 }

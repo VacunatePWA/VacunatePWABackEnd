@@ -9,15 +9,10 @@ export const validateAccess = (
   res: Response,
   next: NextFunction
 ): any => {
-  console.log('=== AUTH MIDDLEWARE DEBUG ===');
-  console.log('Cookies received:', req.cookies);
-  console.log('Headers cookie:', req.headers.cookie);
-  
   if (!JWT_KEY)
     return res.status(501).json({ message: "JWT_KEY is not defined in .env file" });
 
   const { token } = req.cookies as CookiesDTO;
-  console.log('Token extracted from cookies:', token ? token.substring(0, 20) + '...' : 'undefined');
   
   if (!token) return res.status(401).json({ message: "Invalid credentials" });
 
@@ -27,14 +22,22 @@ export const validateAccess = (
   }
   const { exp } = decoded as JwtPayload;
   if (!exp)
-    return res.status(404).json({ message: "Token doesn't have expire time" });
+    return res.status(401).json({ message: "Token doesn't have expire time" });
 
   if (Date.now() >= exp * 1000)
     return res.status(401).json({ message: "Token has expired" });
 
   jwt.verify(token, JWT_KEY, (err, decode) => {
     if (err) return res.status(401).json({ message: "Invalid credentials" });
-    req.user = decode;
+    // Normaliza el usuario para que siempre tenga idUser
+    if (decode && typeof decode === 'object') {
+      req.user = {
+        ...decode,
+        idUser: (decode as any).idUser || (decode as any).id || (decode as any).userId
+      };
+    } else {
+      req.user = decode;
+    }
     next();
   });
 };

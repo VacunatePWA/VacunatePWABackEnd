@@ -22,6 +22,37 @@ export class AuthController {
     }
   }
 
+  static async getUsersByRole(req: Request, res: Response): Promise<any> {
+    try {
+      const { roleName } = req.params;
+
+      const users = await prisma.user.findMany({
+        where: { 
+          active: true,
+          role: {
+            name: roleName
+          }
+        },
+        include: {
+          role: {
+            select: {
+              idRole: true,
+              name: true
+            }
+          }
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return res.status(200).json(users);
+    } catch (error) {
+      return res.status(500).json({
+        message:
+          error instanceof Error ? error.message : "Internal server error",
+      });
+    }
+  }
+
   static async register(req: Request, res: Response): Promise<any> {
     try {
       const {
@@ -176,7 +207,7 @@ static async deleteUser(req: Request, res: Response): Promise<any> {
   }
 
   static logOut(req: Request, res: Response): any {
-    res.cookie("token", "");
+    res.clearCookie("token");
     res.sendStatus(200);
   }
 
@@ -216,15 +247,17 @@ static async deleteUser(req: Request, res: Response): Promise<any> {
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      const { password, ...userProfile } = user;
+      
+      // Extraer datos del usuario sin password y userClinics
+      const { password, userClinics, ...userProfile } = user;
       
       // Extraer solo los centros del array de userClinics
-      const clinics = (user as any).userClinics?.map((uc: any) => uc.clinic) || [];
+      const assignedClinics = userClinics?.map((uc: any) => uc.clinic) || [];
       
       return res.status(200).json({ 
         user: {
           ...userProfile,
-          assignedClinics: clinics
+          assignedClinics
         }
       });
     } catch (error) {

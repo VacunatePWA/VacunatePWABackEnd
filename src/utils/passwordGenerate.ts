@@ -5,4 +5,4 @@
 const keyword = 'PROYECTODEVACUNACIÓN'
 const password = Bun.password.hashSync(keyword);
 
-console.log(password);
+console.log(password); 

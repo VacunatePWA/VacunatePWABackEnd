@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { AddChildDTO } from "../DTOs/AddChildDTO";
 import prisma from "../db/prisma";
+import { z } from "zod";
+import { updateChildWithTutorSchema } from "../schemas/child.schema";
+
+type UpdateChildWithTutorBody = z.infer<typeof updateChildWithTutorSchema>;
 
 export class ChildController {
   static async getAllChilds(req: Request, res: Response): Promise<any> {
@@ -673,14 +677,10 @@ export class ChildController {
 
   static async updateChildWithTutor(req: Request, res: Response): Promise<any> {
     try {
-      const { child, users, relations, tutorId, vaccineRecords } = req.body;
-
-      // Verificar si el niño existe
-      const existingChild = await prisma.child.findFirst({
-        where: { 
-          identification: child.identification, 
-          active: true 
-        }
+      const { child, users, tutorId, vaccineRecords } = req.body as UpdateChildWithTutorBody;
+      
+      const existingChild = await prisma.child.findUnique({
+        where: { idChild: child.idChild }
       });
 
       if (!existingChild) {
@@ -756,6 +756,10 @@ export class ChildController {
         } else if (users && users.length > 0) {
           // Crear o actualizar tutor
           const userData = users[0];
+          if (!userData) {
+            throw new Error("Datos de usuario de tutor no válidos.");
+          }
+          
           const existingUser = await tx.user.findFirst({
             where: { identification: userData.identification, active: true }
           });
@@ -813,34 +817,68 @@ export class ChildController {
           }
         }
 
-        // Actualizar registros de vacunas si se proporcionaron
-        if (vaccineRecords && vaccineRecords.length > 0) {
-          // Desactivar registros anteriores
-          await tx.record.updateMany({
-            where: {
-              childId: existingChild.idChild,
-              active: true
-            },
-            data: { active: false }
-          });
-
-          // Crear nuevos registros
-          for (const record of vaccineRecords) {
-            const vaccine = await tx.vaccine.findFirst({
-              where: { name: record.vaccineName }
+        // --- LÓGICA DE ACTUALIZACIÓN DE VACUNAS INTELIGENTE ---
+        if (vaccineRecords) {
+          if (!tutorUser) {
+            const currentRelation = await tx.guardianChild.findFirst({
+              where: { childId: existingChild.idChild, active: true },
+              include: { guardian: true }
             });
+            if (currentRelation?.guardian) {
+              tutorUser = currentRelation.guardian;
+            } else {
+              const loggedInUser = await tx.user.findUnique({ where: { idUser: req.user.idUser } });
+              if (!loggedInUser) throw new Error("No se pudo determinar un usuario responsable para el registro.");
+              tutorUser = loggedInUser;
+            }
+          }
 
-            if (vaccine) {
-              if (!tutorUser) {
-                throw new Error("No se pudo determinar el tutor/usuario responsable para el registro de vacuna.");
-              }
+          const existingDbRecords = await tx.record.findMany({
+            where: { childId: existingChild.idChild },
+            include: { vaccine: true }
+          });
+          const dbRecordMap = new Map(existingDbRecords.map(r => [r.vaccine.name, r]));
+          const incomingVaccineNames = new Set(vaccineRecords.map(r => r.vaccineName));
+          const allVaccines = await tx.vaccine.findMany();
+          const vaccineMap = new Map(allVaccines.map(v => [v.name, v.idVaccine]));
+
+          // Desactivar registros que ya no vienen en el payload
+          for (const dbRecord of existingDbRecords) {
+            if (dbRecord.active && !incomingVaccineNames.has(dbRecord.vaccine.name)) {
+              await tx.record.update({
+                where: { idRecord: dbRecord.idRecord },
+                data: { active: false }
+              });
+            }
+          }
+
+          // Actualizar, reactivar o crear nuevos registros
+          for (const incomingRecord of vaccineRecords) {
+            const vaccineId = vaccineMap.get(incomingRecord.vaccineName);
+            if (!vaccineId) continue;
+
+            const existingRecord = dbRecordMap.get(incomingRecord.vaccineName);
+
+            if (existingRecord) {
+              // Si existe, actualizar y asegurar que esté activo
+              await tx.record.update({
+                where: { idRecord: existingRecord.idRecord },
+                data: {
+                  dosesApplied: incomingRecord.dosesApplied,
+                  notes: incomingRecord.notes || "",
+                  dateApplied: incomingRecord.applicationDate ? new Date(incomingRecord.applicationDate) : new Date(),
+                  active: true
+                }
+              });
+            } else {
+              // Si no existe, crear uno nuevo
               await tx.record.create({
                 data: {
                   childId: existingChild.idChild,
-                  vaccineId: vaccine.idVaccine,
-                  dosesApplied: record.dosesApplied,
-                  notes: record.notes || "",
-                  dateApplied: record.applicationDate ? new Date(record.applicationDate) : new Date(),
+                  vaccineId,
+                  dosesApplied: incomingRecord.dosesApplied,
+                  notes: incomingRecord.notes || "",
+                  dateApplied: incomingRecord.applicationDate ? new Date(incomingRecord.applicationDate) : new Date(),
                   userId: tutorUser.idUser,
                   active: true
                 }
@@ -849,7 +887,7 @@ export class ChildController {
           }
         }
 
-        // Obtener tutores activos
+        // Obtener datos actualizados para la respuesta
         const activeTutors = await tx.guardianChild.findMany({
           where: {
             childId: existingChild.idChild,

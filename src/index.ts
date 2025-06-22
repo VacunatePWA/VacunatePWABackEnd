@@ -14,6 +14,8 @@ import { userChildRouter } from "./routes/userChild.route";
 import { guardianRouter } from "./routes/guardian.route";
 import vaccinationStatusRouter from "./routes/vaccinationStatus.route";
 import userClinicRouter from "./routes/userClinic.route";
+import { initializeCronJobs } from './index.cron';
+import { sendEmail } from './utils/email.service';
 
 const app = express();
 
@@ -50,5 +52,36 @@ app.get("/", (req, res) => {
   res.send("Hola mundo");
 });
 
-app.listen(3000);
-console.log("Servidor corriendo en http://localhost:3000 ✅");
+const main = async () => {
+  try {
+    const port = process.env.PORT || 3000;
+    app.listen(port, async () => {
+      console.log(`Server running on port ${port}`);
+      
+      // Inicializar las tareas programadas
+      initializeCronJobs();
+
+      // Enviar correo de prueba al iniciar
+      if (process.env.EMAIL_USER) {
+        try {
+          await sendEmail({
+            to: process.env.EMAIL_USER,
+            subject: '✅ Servidor de Vacúnate RD Iniciado',
+            html: `
+              <p>El servidor de la aplicación Vacúnate RD se ha iniciado correctamente.</p>
+              <p>Fecha y hora: ${new Date().toLocaleString('es-DO')}</p>
+              <p>Las notificaciones automáticas están activas.</p>
+            `,
+          });
+          console.log('Correo de prueba de inicio enviado exitosamente.');
+        } catch (emailError) {
+          console.error('Fallo al enviar el correo de prueba de inicio:', emailError);
+        }
+      }
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+main();

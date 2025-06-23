@@ -6,12 +6,27 @@ export class UserChildController {
   static async getAllRelations(req: Request, res: Response): Promise<any> {
     try {
       const relations = await prisma.guardianChild.findMany({
+        where: { active: true },
         include: {
           child: true,
           guardian: true,
         },
       });
-      return res.status(200).json(relations);
+
+      // Transformar las relaciones al formato esperado por el frontend
+      const formattedRelations = relations.map(relation => ({
+        identificationUser: relation.guardian.identification,
+        identificationChild: relation.child.identification,
+        relationship: relation.relationship,
+        guardianName: `${relation.guardian.firstName} ${relation.guardian.lastName}`,
+        childName: `${relation.child.firstName} ${relation.child.lastName}`,
+        assignedAt: relation.assignedAt
+      }));
+
+      return res.status(200).json({
+        message: "Relaciones obtenidas exitosamente",
+        data: formattedRelations
+      });
     } catch (error) {
       return res.status(500).json({ message: error instanceof Error ? error.message : "Internal server error" });
     }

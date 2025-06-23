@@ -2,7 +2,7 @@ import { Router } from "express";
 import { ChildController } from "../controllers/Child.controller";
 import { validateAccess } from "../middlewares/auth.middleware";
 import { validateSchema } from "../middlewares/validation.middleware";
-import { updateChildWithTutorSchema } from "../schemas/child.schema";
+import { createChildWithTutorSchema, updateChildWithTutorSchema } from "../schemas/child.schema";
 
 const router: Router = Router();
 
@@ -17,7 +17,7 @@ router.get("/children/my-children", getMyChildren);
 router.get("/children/:childId/vaccination-status", getVaccinationStatus);
 router.get("/children/:childId/vaccination-card", generateVaccinationCard);
 router.post("/child", addChild);
-router.post("/children/with-tutor", createChildWithTutor);
+router.post("/children/with-tutor", validateSchema(createChildWithTutorSchema), createChildWithTutor);
 router.put("/child", updateChild);
 router.put("/children/with-tutor", validateSchema(updateChildWithTutorSchema), updateChildWithTutor);
 router.delete("/child", deleteChild);

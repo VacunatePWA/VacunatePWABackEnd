@@ -14,7 +14,6 @@ router.get("/appointments/count", getAppointmentCount);
 router.get("/appointments", getAllAppointments);
 router.post("/appointment", addAppointment);
 router.put("/appointment", updateAppointment);
-router.delete("/appointment", deleteAppointment);
 router.post("/appointment/delete", deleteAppointment);
 
 export { router as appointmentRouter };

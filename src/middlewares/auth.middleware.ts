@@ -29,12 +29,16 @@ export const validateAccess = (
 
   jwt.verify(token, JWT_KEY, (err, decode) => {
     if (err) return res.status(401).json({ message: "Invalid credentials" });
-    // Normaliza el usuario para que siempre tenga idUser
+    
+    // Normaliza el usuario para que siempre tenga idUser e identification
     if (decode && typeof decode === 'object') {
-      req.user = {
+      const user = {
         ...decode,
-        idUser: (decode as any).idUser || (decode as any).id || (decode as any).userId
+        idUser: (decode as any).idUser || (decode as any).id || (decode as any).userId,
+        identification: (decode as any).identification || (decode as any).cedula || (decode as any).ident
       };
+      
+      req.user = user;
     } else {
       req.user = decode;
     }

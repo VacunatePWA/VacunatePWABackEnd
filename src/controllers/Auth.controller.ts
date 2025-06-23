@@ -120,8 +120,8 @@ export class AuthController {
         try {
           await prisma.userClinic.create({
             data: {
-              idUser: newUser.idUser,
-              idClinic: idClinic,
+              userId: newUser.idUser,
+              clinicId: idClinic,
             },
           });
         } catch (clinicError) {
@@ -166,7 +166,15 @@ export class AuthController {
         return res.status(401).json({ message: "Invalid credentials" });
 
       //Create JasonWebToken
-      const token = jwt.sign({ id: userFounded.idUser }, JWT_KEY, {
+      const token = jwt.sign({ 
+        id: userFounded.idUser,
+        idUser: userFounded.idUser,
+        identification: userFounded.identification,
+        firstName: userFounded.firstName,
+        lastName: userFounded.lastName,
+        email: userFounded.email,
+        roleId: userFounded.roleId
+      }, JWT_KEY, {
         expiresIn: "1h",
       });
 

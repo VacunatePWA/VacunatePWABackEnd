@@ -30,7 +30,24 @@ const corsOptions: CorsOptions = {
 
 app.use(cors(corsOptions));
 app.use(morgan("dev"));
-app.use(json());
+
+// JSON parsing with error handling
+app.use(json({ limit: '10mb' }));
+
+// Error handling middleware for JSON parsing
+app.use((error: any, req: any, res: any, next: any) => {
+  if (error instanceof SyntaxError && 'body' in error) {
+    console.error('JSON Parse Error:', error.message);
+    console.error('Request URL:', req.url);
+    console.error('Request method:', req.method);
+    return res.status(400).json({ 
+      message: 'Invalid JSON format in request body',
+      error: error.message 
+    });
+  }
+  next(error);
+});
+
 app.use(cookieParser());
 
 //API routes

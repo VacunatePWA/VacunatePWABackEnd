@@ -88,17 +88,27 @@ export class AppointmentController {
   }
 
   static async updateAppointment(req: Request, res: Response): Promise<any> {
-    const {
-      idAppointment,
-      date,
-      notes,
-      state,
-      clinicId
-    } = req.body;
-
     try {
+      console.log('📝 UPDATE APPOINTMENT REQUEST BODY:', req.body);
+      
+      const {
+        idAppointment,
+        date,
+        notes,
+        state,
+        clinicId,
+        identificationChild,
+        identificationUser
+      } = req.body;
+
+      // Validación más estricta
       if (!idAppointment) {
         return res.status(400).json({ message: "idAppointment is required" });
+      }
+
+      // Validar formato UUID si es necesario
+      if (typeof idAppointment !== 'string') {
+        return res.status(400).json({ message: "idAppointment must be a string" });
       }
 
       const appointment = await prisma.appointment.findUnique({
@@ -109,6 +119,9 @@ export class AppointmentController {
         return res.status(404).json({ message: "Appointment not found" });
       }
 
+      console.log('📝 EXISTING APPOINTMENT:', appointment);
+
+      // Validar y obtener nueva clínica si se proporciona
       let newClinicId = appointment.clinicId;
       if (clinicId && clinicId !== appointment.clinicId) {
         const clinic = await prisma.clinic.findUnique({
@@ -120,21 +133,82 @@ export class AppointmentController {
         newClinicId = clinicId;
       }
 
+      // Validar y obtener nuevo paciente si se proporciona
+      let newChildId = appointment.childId;
+      if (identificationChild) {
+        console.log('🔍 Looking for child with identification:', identificationChild);
+        const child = await prisma.child.findFirst({
+          where: { identification: identificationChild, active: true },
+        });
+        if (!child) {
+          return res.status(404).json({ message: "Child not found" });
+        }
+        console.log('✅ Found child:', child);
+        newChildId = child.idChild;
+      }
+
+      // Validar y obtener nuevo usuario si se proporciona
+      let newUserId = appointment.userId;
+      if (identificationUser) {
+        console.log('🔍 Looking for user with identification:', identificationUser);
+        const user = await prisma.user.findFirst({
+          where: { identification: identificationUser, active: true },
+        });
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        console.log('✅ Found user:', user);
+        newUserId = user.idUser;
+      }
+
+      // Validar que no exista una cita duplicada con los nuevos datos
+      if (identificationChild || identificationUser || clinicId || date) {
+        const duplicateCheck = await prisma.appointment.findFirst({
+          where: {
+            childId: newChildId,
+            userId: newUserId,
+            clinicId: newClinicId,
+            date: date || appointment.date,
+            active: true,
+            NOT: {
+              idAppointment: idAppointment // Excluir la cita actual de la verificación
+            }
+          },
+        });
+
+        if (duplicateCheck) {
+          return res.status(409).json({ 
+            message: "A similar appointment already exists with these parameters" 
+          });
+        }
+      }
+
+      // Construir objeto de actualización solo con campos válidos
+      const updateData: any = {
+        clinicId: newClinicId,
+        childId: newChildId,
+        userId: newUserId,
+      };
+
+      if (notes !== undefined) updateData.notes = notes;
+      if (state !== undefined) updateData.state = state;
+      if (date !== undefined) updateData.date = date;
+
+      console.log('📝 UPDATE DATA:', updateData);
+
       const updatedAppointment = await prisma.appointment.update({
         where: { idAppointment },
-        data: {
-          notes: notes ?? appointment.notes,
-          state: state ?? appointment.state,
-          date: date ?? appointment.date,
-          clinicId: newClinicId,
-        },
+        data: updateData,
       });
+
+      console.log('✅ APPOINTMENT UPDATED:', updatedAppointment);
 
       return res.status(200).json({
         message: "Appointment updated successfully",
         updatedAppointment,
       });
     } catch (error) {
+      console.error('❌ Error updating appointment:', error);
       return res.status(500).json({
         message:
           error instanceof Error ? error.message : "Internal server error",

@@ -27,13 +27,23 @@ export class VaccineSchemaController {
   static async addVaccineSchema(req: Request, res: Response): Promise<any> {
     try {
       const { name, doses, description, age, vaccineName } = req.body as AddVaccineSchemaDTO;
-
+      
       const vaccine = await prisma.vaccine.findFirst({
         where: { name: vaccineName, active: true },
       });
 
       if (!vaccine) {
-        return res.status(404).json({ message: "Vaccine not found." });
+        // Buscar todas las vacunas activas para debug
+        const allVaccines = await prisma.vaccine.findMany({
+          where: { active: true },
+          select: { idVaccine: true, name: true }
+        });
+        
+        return res.status(404).json({ 
+          message: "Vaccine not found.",
+          searchedName: vaccineName,
+          availableVaccines: allVaccines.map(v => v.name)
+        });
       }
 
       const newVaccineSchema = await prisma.vaccineSchema.create({
@@ -59,8 +69,32 @@ export class VaccineSchemaController {
 
   static async updateVaccineSchema(req: Request, res: Response): Promise<any> {
     try {
-      const { name, description, vaccineName } = req.body as AddVaccineSchemaDTO;
+      const { idVaccineSchema, name, doses, description, age, vaccineName } = req.body as AddVaccineSchemaDTO & { idVaccineSchema: string };
 
+      // Si se proporciona idVaccineSchema, usarlo directamente
+      if (idVaccineSchema) {
+        const schema = await prisma.vaccineSchema.findUnique({
+          where: { idVaccineSchema },
+        });
+
+        if (!schema) {
+          return res.status(404).json({ message: "VaccineSchema not found." });
+        }
+
+        await prisma.vaccineSchema.update({
+          where: { idVaccineSchema },
+          data: {
+            name,
+            Doses: doses,
+            age: age,
+            Description: description,
+          },
+        });
+
+        return res.status(200).json({ message: "VaccineSchema updated successfully." });
+      }
+
+      // Fallback: buscar por name y vaccineName (método anterior)
       const vaccine = await prisma.vaccine.findFirst({
         where: { name: vaccineName, active: true },
       });
@@ -83,6 +117,8 @@ export class VaccineSchemaController {
       await prisma.vaccineSchema.update({
         where: { idVaccineSchema: schema.idVaccineSchema },
         data: {
+          Doses: doses,
+          age: age,
           Description: description,
         },
       });

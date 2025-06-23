@@ -57,7 +57,7 @@ export class VaccineController {
     try {
       const { idVaccine, name, brand, description } = req.body as UpdateVaccineDTO;
 
-      console.log('Update vaccine request:', req.body);
+
 
       if (!idVaccine) {
         return res.status(400).json({ message: "idVaccine is required for update." });

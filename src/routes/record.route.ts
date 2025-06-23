@@ -6,10 +6,11 @@ const router: Router = Router();
 
 router.use(validateAccess);
 
-const { addRecord, getAllRecords, updateRecord, deleteRecord } =
+const { addRecord, getAllRecords, updateRecord, deleteRecord, getRecordsByChild } =
   RecordController;
 
 router.get("/records", getAllRecords);
+router.get("/records/child/:childId", getRecordsByChild);
 router.post("/record", addRecord);
 router.put("/record", updateRecord);
 router.delete("/record", deleteRecord);

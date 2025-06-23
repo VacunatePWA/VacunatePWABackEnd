@@ -24,6 +24,19 @@ export class ClinicController {
     try {
       const { name, shortName, city, municipality, street, phone, director, website, email, latitude, longitude } = req.body as AddClinicDTO;
 
+      // Validar campos requeridos
+      if (!name) {
+        return res.status(400).json({ 
+          message: "El nombre del centro médico es requerido" 
+        });
+      }
+
+      if (!city) {
+        return res.status(400).json({ 
+          message: "La ciudad es requerida" 
+        });
+      }
+
       const clinicFounded = await prisma.clinic.findFirst({ where: { name, active: true } });
       if (clinicFounded) {
         return res

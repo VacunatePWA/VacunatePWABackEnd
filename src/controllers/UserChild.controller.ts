@@ -13,7 +13,6 @@ export class UserChildController {
         },
       });
 
-      // Transformar las relaciones al formato esperado por el frontend
       const formattedRelations = relations.map(relation => ({
         identificationUser: relation.guardian.identification,
         identificationChild: relation.child.identification,

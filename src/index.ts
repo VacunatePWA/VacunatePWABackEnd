@@ -63,7 +63,6 @@ app.use("/api", userChildRouter); //User-Child relations
 app.use("/api", guardianRouter); //Guardians/Tutors
 app.use("/api", vaccinationStatusRouter); // Vaccination status endpoint
 app.use("/api", userClinicRouter); // User-Clinic assignments
-// app.use("/api", ...): monta todas las rutas de recursos principales
 
 app.get("/", (req, res) => {
   res.send("Hola mundo");
@@ -75,10 +74,8 @@ const main = async () => {
     app.listen(port, async () => {
       console.log(`Server running on port ${port}`);
       
-      // Inicializar las tareas programadas
       initializeCronJobs();
 
-      // Enviar correo de prueba al iniciar
       if (process.env.EMAIL_USER) {
         try {
           await sendEmail({

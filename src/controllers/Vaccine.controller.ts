@@ -4,7 +4,6 @@ import { UpdateVaccineDTO } from "../DTOs/UpdateVaccineDTO";
 import prisma from "../db/prisma";
 
 export class VaccineController {
-  // Métodos: getAllVaccines, addVaccine, updateVaccine, deleteVaccine
 
   static async getAllVaccines(req: Request, res: Response): Promise<any> {
     try {
@@ -71,7 +70,6 @@ export class VaccineController {
         return res.status(404).json({ message: "Vaccine not found." });
       }
 
-      // Verificar si ya existe otra vacuna con el mismo nombre (excluyendo la actual)
       if (name !== vaccineFounded.name) {
         const existingVaccine = await prisma.vaccine.findFirst({
           where: { 

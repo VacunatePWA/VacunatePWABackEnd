@@ -9,7 +9,6 @@ router.use(validateAccess);
 const { addVaccine, deleteVaccine, getAllVaccines, updateVaccine } =
   VaccineController;
 
-// CRUD de vacunas
 router.get("/vaccines", getAllVaccines);
 router.post("/vaccine", addVaccine);
 router.put("/vaccine", updateVaccine);

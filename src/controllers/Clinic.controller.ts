@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { AddClinicDTO } from "../DTOs/AddClinicDTO";
 import prisma from "../db/prisma";
 
-// Métodos: getAllClinics, addClinic, updateClinic, deleteClinic, getClinicCount
 export class ClinicController {
   static async getAllClinics(req: Request, res: Response): Promise<any> {
     try {

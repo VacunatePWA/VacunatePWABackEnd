@@ -6,7 +6,6 @@ const router: Router = Router();
 
 router.use(validateAccess);
 
-// CRUD de clínicas y conteo
 const { addClinic, deleteClinic, getAllClinics, updateClinic, getClinicCount } =
   ClinicController;
 

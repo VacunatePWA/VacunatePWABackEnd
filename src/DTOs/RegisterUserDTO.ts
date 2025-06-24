@@ -8,6 +8,8 @@ export interface RegisterUserDTO {
   password: string;
   phone: string;
   email: string;
+  city: string;
+  municipality: string;
   supervisorIdentification?: string;
   role: string;
   idClinic?: string;

@@ -2,12 +2,10 @@ import { Request, Response } from 'express';
 import prisma from '../db/prisma';
 
 export class UserClinicController {
-  // Asignar un centro a un usuario (enfermero/doctor)
   static async assignClinicToUser(req: Request, res: Response): Promise<any> {
     try {
       const { userId, clinicId } = req.body;
 
-      // Verificar que el usuario existe y tiene el rol correcto
       const user = await prisma.user.findUnique({
         where: { idUser: userId, active: true },
         include: { role: true }
@@ -20,7 +18,6 @@ export class UserClinicController {
         });
       }
 
-      // Verificar que es enfermero o doctor
       if (!['DOCTOR', 'ENFERMERO'].includes(user.role.name)) {
         return res.status(400).json({
           success: false,
@@ -28,7 +25,6 @@ export class UserClinicController {
         });
       }
 
-      // Verificar que el centro existe
       const clinic = await prisma.clinic.findUnique({
         where: { idClinic: clinicId, active: true }
       });
@@ -40,7 +36,6 @@ export class UserClinicController {
         });
       }
 
-      // Verificar si ya existe la asignación
       const existingAssignment = await prisma.userClinic.findFirst({
         where: {
           userId,
@@ -56,7 +51,6 @@ export class UserClinicController {
         });
       }
 
-      // Crear la asignación
       const assignment = await prisma.userClinic.create({
         data: {
           userId,
@@ -98,7 +92,6 @@ export class UserClinicController {
     }
   }
 
-  // Remover asignación de centro (soft delete)
   static async removeClinicFromUser(req: Request, res: Response): Promise<any> {
     try {
       const { userId, clinicId } = req.body;
@@ -457,7 +450,6 @@ export class UserClinicController {
           userClinics: {
             where: { 
               active: true,
-              clinicId: { in: clinicIds } // Solo centros en común
             },
             include: {
               clinic: {

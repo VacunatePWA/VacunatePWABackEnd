@@ -3,7 +3,6 @@ import { AddVaccineSchemaDTO } from "../DTOs/AddVaccineSchemaDTO";
 import prisma from "../db/prisma";
 
 export class VaccineSchemaController {
-  // Métodos: getAllVaccineSchemas, addVaccineSchema, updateVaccineSchema, deleteVaccineSchema
 
   static async getAllVaccineSchemas(req: Request, res: Response): Promise<any> {
     try {
@@ -33,7 +32,6 @@ export class VaccineSchemaController {
       });
 
       if (!vaccine) {
-        // Buscar todas las vacunas activas para debug
         const allVaccines = await prisma.vaccine.findMany({
           where: { active: true },
           select: { idVaccine: true, name: true }
@@ -71,7 +69,6 @@ export class VaccineSchemaController {
     try {
       const { idVaccineSchema, name, doses, description, age, vaccineName } = req.body as AddVaccineSchemaDTO & { idVaccineSchema: string };
 
-      // Si se proporciona idVaccineSchema, usarlo directamente
       if (idVaccineSchema) {
         const schema = await prisma.vaccineSchema.findUnique({
           where: { idVaccineSchema },
@@ -94,7 +91,6 @@ export class VaccineSchemaController {
         return res.status(200).json({ message: "VaccineSchema updated successfully." });
       }
 
-      // Fallback: buscar por name y vaccineName (método anterior)
       const vaccine = await prisma.vaccine.findFirst({
         where: { name: vaccineName, active: true },
       });

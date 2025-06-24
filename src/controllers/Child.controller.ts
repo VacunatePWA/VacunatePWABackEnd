@@ -11,6 +11,13 @@ export class ChildController {
     try {
       const Childs = await prisma.child.findMany({
         where: { active: true },
+        include: {
+          guardianChildren: {
+            include: {
+              guardian: true
+            }
+          }
+        },
         orderBy: { createdAt: "desc" },
       });
       return res.status(200).json({
@@ -108,7 +115,6 @@ export class ChildController {
     }
   }
 
-  // Método para obtener tutores disponibles
   static async getAvailableTutors(req: Request, res: Response): Promise<any> {
     try {
       // Buscar usuarios con rol de tutor
@@ -156,7 +162,6 @@ export class ChildController {
         return res.status(401).json({ message: "Usuario no autenticado" });
       }
 
-      // Primero encontrar el usuario por su identificación
       const user = await prisma.user.findFirst({
         where: { identification: userIdentification, active: true }
       });
@@ -198,7 +203,6 @@ export class ChildController {
         return res.status(401).json({ message: "Usuario no autenticado" });
       }
 
-      // Primero encontrar el usuario por su identificación
       const user = await prisma.user.findFirst({
         where: { identification: userIdentification, active: true }
       });
@@ -207,7 +211,6 @@ export class ChildController {
         return res.status(404).json({ message: "Usuario no encontrado" });
       }
 
-      // Verificar que el usuario es tutor del niño
       const child = await prisma.child.findUnique({
         where: { idChild: childId }
       });
@@ -228,7 +231,6 @@ export class ChildController {
         return res.status(403).json({ message: "No tiene permisos para ver la información de este niño" });
       }
 
-      // Obtener los registros de vacunación del niño
       const vaccinationRecords = await prisma.record.findMany({
         where: {
           childId: childId,
@@ -246,7 +248,6 @@ export class ChildController {
       const ageInMonths = (now.getFullYear() - birthDate.getFullYear()) * 12 + 
                          (now.getMonth() - birthDate.getMonth());
 
-      // Obtener las vacunas que debería tener según su edad
       const requiredVaccines = await prisma.vaccineSchema.findMany({
         where: {
           age: { lte: ageInMonths },
@@ -257,7 +258,6 @@ export class ChildController {
         }
       });
 
-      // Determinar qué vacunas faltan
       const appliedVaccineIds = vaccinationRecords.map(record => record.vaccineId);
       const pendingVaccines = requiredVaccines.filter(schema => 
         !appliedVaccineIds.includes(schema.idVaccine)
@@ -286,7 +286,6 @@ export class ChildController {
     }
   }
 
-  // Placeholder para generar carnet de vacunación
   static async generateVaccinationCard(req: Request, res: Response): Promise<any> {
     try {
       const { childId } = req.params;
@@ -296,7 +295,6 @@ export class ChildController {
         return res.status(401).json({ message: "Usuario no autenticado" });
       }
 
-      // Primero encontrar el usuario por su identificación
       const user = await prisma.user.findFirst({
         where: { identification: userIdentification, active: true }
       });
@@ -305,7 +303,6 @@ export class ChildController {
         return res.status(404).json({ message: "Usuario no encontrado" });
       }
 
-      // Verificar que el usuario es tutor del niño
       const relation = await prisma.guardianChild.findFirst({
         where: {
           guardianId: user.idUser,
@@ -318,12 +315,10 @@ export class ChildController {
         return res.status(403).json({ message: "No tiene permisos para generar el carnet de este niño" });
       }
 
-      // Obtener información completa del niño
       const child = await prisma.child.findUnique({
         where: { idChild: childId }
       });
 
-      // Obtener registros de vacunación
       const vaccinationRecords = await prisma.record.findMany({
         where: {
           childId: childId,
@@ -380,7 +375,6 @@ export class ChildController {
         return res.status(404).json({ message: "Usuario no encontrado" });
       }
 
-      // Obtener hijos del tutor a través de la tabla de relaciones
       const guardianChildRelations = await prisma.guardianChild.findMany({
         where: {
           guardianId: user.idUser,
@@ -416,7 +410,6 @@ export class ChildController {
         return res.status(401).json({ message: "Usuario no autorizado" });
       }
 
-      // Verificar que el niño pertenece al tutor
       const child = await prisma.child.findFirst({
         where: {
           idChild: childId,
@@ -440,7 +433,6 @@ export class ChildController {
       const ageInMonths = (now.getFullYear() - birthDate.getFullYear()) * 12 + 
                          (now.getMonth() - birthDate.getMonth());
 
-      // Obtener esquemas de vacunación aplicables
       const applicableSchemas = await prisma.vaccineSchema.findMany({
         where: {
           age: { lte: ageInMonths },
@@ -462,7 +454,6 @@ export class ChildController {
         }
       });
 
-      // Determinar estado de vacunación
       let isUpToDate = true;
       const missingVaccines = [];
 
@@ -504,7 +495,6 @@ export class ChildController {
     try {
       const { child, users, relations, tutorId, vaccineRecords } = req.body;
 
-      // Verificar si el niño ya existe
       const existingChild = await prisma.child.findFirst({
         where: { 
           identification: child.identification, 
@@ -519,7 +509,6 @@ export class ChildController {
       }
 
       return await prisma.$transaction(async (tx) => {
-        // Crear el niño
         const newChild = await tx.child.create({
           data: {
             ...child,
@@ -539,7 +528,6 @@ export class ChildController {
             throw new Error("Tutor especificado no encontrado");
           }
 
-          // Buscar si ya existe una relación (aunque esté inactiva)
           const existingRelation = await tx.guardianChild.findFirst({
             where: {
               guardianId: tutorUser.idUser,
@@ -548,7 +536,6 @@ export class ChildController {
           });
 
           if (existingRelation) {
-            // Reactivar y actualizar la relación
             await tx.guardianChild.update({
               where: { idGuardianChild: existingRelation.idGuardianChild },
               data: {
@@ -557,7 +544,6 @@ export class ChildController {
               }
             });
           } else {
-            // Crear nueva relación activa
             await tx.guardianChild.create({
               data: {
                 guardianId: tutorUser.idUser,
@@ -597,13 +583,11 @@ export class ChildController {
               data: {
                 ...userData,
                 roleId: tutorRole.idRole,
-                password: "defaultPassword123", // Contraseña temporal
                 active: true
               }
             });
           }
 
-          // Buscar si ya existe una relación (aunque esté inactiva)
           const existingRelation = await tx.guardianChild.findFirst({
             where: {
               guardianId: tutorUser.idUser,
@@ -612,7 +596,6 @@ export class ChildController {
           });
 
           if (existingRelation) {
-            // Reactivar y actualizar la relación
             await tx.guardianChild.update({
               where: { idGuardianChild: existingRelation.idGuardianChild },
               data: {
@@ -621,7 +604,6 @@ export class ChildController {
               }
             });
           } else {
-            // Crear nueva relación activa
             await tx.guardianChild.create({
               data: {
                 guardianId: tutorUser.idUser,
@@ -694,12 +676,12 @@ export class ChildController {
       }
 
       return await prisma.$transaction(async (tx) => {
-        // Actualizar datos del niño
         const updatedChild = await tx.child.update({
           where: { idChild: existingChild.idChild },
           data: {
             firstName: child.firstName,
             lastName: child.lastName,
+            identification: child.identification,
             gender: child.gender,
             nationality: child.nationality,
             city: child.city,
@@ -720,7 +702,6 @@ export class ChildController {
         // Procesar relaciones si se proporcionaron
         if (relationships && relationships.length > 0) {
           for (const relation of relationships) {
-            // Buscar el tutor por identificación
             const tutor = await tx.user.findFirst({
               where: { 
                 identification: relation.identificationUser, 
@@ -732,7 +713,6 @@ export class ChildController {
               continue;
             }
 
-            // Buscar si ya existe una relación (aunque esté inactiva)
             const existingRelation = await tx.guardianChild.findFirst({
               where: {
                 guardianId: tutor.idUser,
@@ -741,7 +721,6 @@ export class ChildController {
             });
 
             if (existingRelation) {
-              // Reactivar y actualizar la relación
               await tx.guardianChild.update({
                 where: { idGuardianChild: existingRelation.idGuardianChild },
                 data: {
@@ -750,7 +729,6 @@ export class ChildController {
                 }
               });
             } else {
-              // Crear nueva relación activa
               await tx.guardianChild.create({
                 data: {
                   guardianId: tutor.idUser,
@@ -763,7 +741,6 @@ export class ChildController {
           }
         }
 
-        // --- LÓGICA DE ACTUALIZACIÓN DE VACUNAS INTELIGENTE ---
         if (vaccineRecords && vaccineRecords.length > 0) {
           // Obtener el primer tutor activo para asignar las vacunas
           const firstActiveRelation = await tx.guardianChild.findFirst({
@@ -814,7 +791,6 @@ export class ChildController {
             const existingRecord = dbRecordMap.get(incomingRecord.vaccineName);
 
             if (existingRecord) {
-              // Si existe, actualizar y asegurar que esté activo
               await tx.record.update({
                 where: { idRecord: existingRecord.idRecord },
                 data: {

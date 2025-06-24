@@ -30,7 +30,6 @@ const ChildSchema = z.object({
     identificationType: z.nativeEnum(IdentificationType),
     identification: z.string(),
     birthDate: z.string().refine((date) => {
-      // Permitir tanto formato de fecha ISO como formato de fecha simple
       const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       return isoRegex.test(date) || dateRegex.test(date);
@@ -47,7 +46,6 @@ const ChildCreateSchema = z.object({
     identificationType: z.nativeEnum(IdentificationType),
     identification: z.string(),
     birthDate: z.string().refine((date) => {
-      // Permitir tanto formato de fecha ISO como formato de fecha simple
       const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       return isoRegex.test(date) || dateRegex.test(date);

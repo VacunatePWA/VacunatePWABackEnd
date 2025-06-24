@@ -9,7 +9,6 @@ router.use(validateAccess);
 const { addVaccineSchema, getAllVaccineSchemas, updateVaccineSchema, deleteVaccineSchema } =
   VaccineSchemaController;
 
-// CRUD de esquema de vacunación
 router.get("/vaccineSchemas", getAllVaccineSchemas);
 router.post("/vaccineSchema", addVaccineSchema);
 router.put("/vaccineSchema", updateVaccineSchema);

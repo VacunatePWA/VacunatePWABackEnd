@@ -8,11 +8,9 @@ export async function cancelPastAppointmentsJob() {
   const updated = await prisma.appointment.updateMany({
     where: {
       date: { lt: now },
-      state: 'PENDING', // Usar 'state' en vez de 'status'
       active: true
     },
     data: {
-      state: 'CANCELLED' // Usar 'CANCELLED' según el enum
     }
   });
   if (updated.count > 0) {

@@ -1,5 +1,18 @@
 import { Request, Response } from "express";
 import { RegisterUserDTO } from "../DTOs/RegisterUserDTO";
+
+// Extend Express Request interface to include 'user'
+declare global {
+  namespace Express {
+    interface UserPayload {
+      id: string;
+      [key: string]: any;
+    }
+    interface Request {
+      user?: UserPayload;
+    }
+  }
+}
 import { LogInUserDTO } from "../DTOs/LogInUserDTO";
 import prisma from "../db/prisma";
 import jwt from "jsonwebtoken";
@@ -8,12 +21,19 @@ export class AuthController {
 
   static async getAllUsers(req: Request, res: Response): Promise<any> {
     try {
-      const Vaccines = await prisma.user.findMany({
+      const Users = await prisma.user.findMany({
         where: { active: true },
-
+        include: {
+          role: true,
+          guardianChildren: {
+            include: {
+              child: true
+            }
+          }
+        },
         orderBy: { createdAt: "desc" },
       });
-      return res.status(200).json(Vaccines);
+      return res.status(200).json(Users);
     } catch (error) {
       return res.status(500).json({
         message:
@@ -64,6 +84,8 @@ export class AuthController {
         phone,
         role,
         email,
+        city,
+        municipality,
         supervisorIdentification,
         idClinic,
       } = req.body as RegisterUserDTO;
@@ -111,11 +133,12 @@ export class AuthController {
           phone,
           roleId: roleFounded.idRole,
           email,
+          city,
+          municipality,
           supervisorId: supervisorId,
         },
       });
 
-      // Si es doctor o enfermero y se proporcionó una clínica, crear la asignación
       if ((role === 'Doctor' || role === 'Enfermero') && idClinic) {
         try {
           await prisma.userClinic.create({

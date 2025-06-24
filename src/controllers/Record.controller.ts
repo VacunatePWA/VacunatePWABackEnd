@@ -37,7 +37,6 @@ export class RecordController {
     try {
       const { childId } = req.params;
       
-      // Buscar el niño por su identificación
       const child = await prisma.child.findFirst({
         where: { identification: childId, active: true },
       });

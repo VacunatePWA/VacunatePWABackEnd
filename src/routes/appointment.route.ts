@@ -6,7 +6,6 @@ const router: Router = Router();
 
 router.use(validateAccess);
 
-// CRUD de citas y conteo
 const { addAppointment, deleteAppointment, getAllAppointments, updateAppointment, getAppointmentCount } =
   AppointmentController;
 

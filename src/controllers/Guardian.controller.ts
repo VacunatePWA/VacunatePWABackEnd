@@ -4,7 +4,6 @@ import prisma from "../db/prisma";
 export class GuardianController {
   static async getAvailableTutors(req: Request, res: Response): Promise<any> {
     try {
-      // Obtener usuarios con rol de tutor
       const tutorRole = await prisma.role.findFirst({
         where: { name: "Tutor" }
       });
@@ -48,7 +47,6 @@ export class GuardianController {
 
   static async getAllGuardians(req: Request, res: Response): Promise<any> {
     try {
-      // Obtener roles de tutor y guardian
       const tutorGuardianRoles = await prisma.role.findMany({
         where: {
           name: { in: ["TUTOR", "GUARDIAN"] }

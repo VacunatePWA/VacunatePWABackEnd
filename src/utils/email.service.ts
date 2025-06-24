@@ -1,11 +1,11 @@
 import nodemailer from 'nodemailer';
 import 'dotenv/config';
 
-// Configuración del "transporter" de Nodemailer usando variables de entorno
+// Configuración SMTP con nodemailer
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: parseInt(process.env.EMAIL_PORT || '587', 10),
-  secure: false, // true para el puerto 465, false para otros puertos
+  secure: process.env.EMAIL_PORT === '465', // true para puerto 465, false para otros puertos
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -25,7 +25,7 @@ interface EmailOptions {
 export const sendEmail = async (options: EmailOptions) => {
   try {
     const mailOptions = {
-      from: `"Vacúnate RD" <${process.env.EMAIL_FROM}>`,
+      from: `"Vacúnate RD" <${process.env.FROM_EMAIL || process.env.EMAIL_FROM}>`,
       to: options.to,
       subject: options.subject,
       html: options.html,

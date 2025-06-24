@@ -21,6 +21,10 @@ const userSchema = z.object({
 
   phone: z.string({ required_error: "Phone is required" }),
 
+  city: z.string({ required_error: "City is required" }),
+
+  municipality: z.string({ required_error: "Municipality is required" }),
+
   role: z.string({ required_error: "Role is required" }),
 
   // supervisor: z.string({ required_error: "Supervisor is required" }),

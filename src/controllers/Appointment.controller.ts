@@ -3,13 +3,24 @@ import { AddAppointmentDTO } from "../DTOs/AddAppointmentDTO";
 import prisma from "../db/prisma";
 
 export class AppointmentController {
-  // Métodos: getAllAppointments, addAppointment, updateAppointment, deleteAppointment, getAppointmentCount
 
   static async getAllAppointments(req: Request, res: Response): Promise<any> {
     try {
       const Appointments = await prisma.appointment.findMany({
         where: { active: true },
-
+        include: {
+          child: {
+            include: {
+              guardianChildren: {
+                include: {
+                  guardian: true
+                }
+              }
+            }
+          },
+          user: true,
+          clinic: true
+        },
         orderBy: { createdAt: "desc" },
       });
       return res.status(200).json(Appointments);
@@ -101,7 +112,6 @@ export class AppointmentController {
         identificationUser
       } = req.body;
 
-      // Validación más estricta
       if (!idAppointment) {
         return res.status(400).json({ message: "idAppointment is required" });
       }
@@ -121,7 +131,6 @@ export class AppointmentController {
 
       console.log('📝 EXISTING APPOINTMENT:', appointment);
 
-      // Validar y obtener nueva clínica si se proporciona
       let newClinicId = appointment.clinicId;
       if (clinicId && clinicId !== appointment.clinicId) {
         const clinic = await prisma.clinic.findUnique({
@@ -171,7 +180,6 @@ export class AppointmentController {
             date: date || appointment.date,
             active: true,
             NOT: {
-              idAppointment: idAppointment // Excluir la cita actual de la verificación
             }
           },
         });
@@ -183,7 +191,6 @@ export class AppointmentController {
         }
       }
 
-      // Construir objeto de actualización solo con campos válidos
       const updateData: any = {
         clinicId: newClinicId,
         childId: newChildId,

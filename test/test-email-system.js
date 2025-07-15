@@ -1,11 +1,11 @@
-import { sendEmail } from './src/utils/email.service';
-import prisma from './src/db/prisma';
+import { sendEmail } from '../src/utils/email.service';
+import prisma from '../src/db/prisma';
 import 'dotenv/config';
 
 console.log('🧪 Test de sistema de correo - Vacúnate RD');
 console.log('================================================');
 
-// Mostrar configuración actual (sin mostrar passwords)
+
 console.log('📧 Configuración de correo:');
 console.log(`  HOST: ${process.env.EMAIL_HOST || 'No configurado'}`);
 console.log(`  PORT: ${process.env.EMAIL_PORT || 'No configurado'}`);

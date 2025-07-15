@@ -129,7 +129,7 @@ export class UserClinicController {
     }
   }
 
-  // Obtener centros asignados a un usuario
+  
   static async getUserClinics(req: Request, res: Response): Promise<any> {
     try {
       const { userId } = req.params;
@@ -166,7 +166,7 @@ export class UserClinicController {
     }
   }
 
-  // Obtener usuarios asignados a un centro
+  
   static async getClinicUsers(req: Request, res: Response): Promise<any> {
     try {
       const { clinicId } = req.params;
@@ -202,12 +202,12 @@ export class UserClinicController {
     }
   }
 
-  // Obtener todos los centros disponibles para asignar
+  
   static async getAvailableClinics(req: Request, res: Response): Promise<any> {
     try {
       const { userId } = req.params;
 
-      // Obtener centros ya asignados al usuario
+      
       const assignedClinics = await prisma.userClinic.findMany({
         where: {
           userId,
@@ -218,7 +218,7 @@ export class UserClinicController {
 
       const assignedClinicIds = assignedClinics.map(ac => ac.clinicId);
 
-      // Obtener centros no asignados
+      
       const availableClinics = await prisma.clinic.findMany({
         where: {
           active: true,
@@ -249,12 +249,12 @@ export class UserClinicController {
     }
   }
 
-  // Obtener usuarios supervisados por el usuario actual
+  
   static async getSupervisedUsers(req: Request, res: Response): Promise<any> {
     try {
       const { userId } = req.params;
 
-      // Verificar que el usuario existe y es supervisor
+      
       const supervisor = await prisma.user.findUnique({
         where: { idUser: userId, active: true },
         include: { role: true }
@@ -267,7 +267,7 @@ export class UserClinicController {
         });
       }
 
-      // Obtener usuarios supervisados
+      
       const supervisedUsers = await prisma.user.findMany({
         where: {
           supervisorId: userId,
@@ -327,12 +327,12 @@ export class UserClinicController {
     }
   }
 
-  // Obtener supervisor del usuario actual
+  
   static async getUserSupervisor(req: Request, res: Response): Promise<any> {
     try {
       const { userId } = req.params;
 
-      // Obtener usuario con su supervisor
+      
       const user = await prisma.user.findUnique({
         where: { idUser: userId, active: true },
         include: {
@@ -402,12 +402,12 @@ export class UserClinicController {
     }
   }
 
-  // Obtener colegas del mismo centro (doctores/enfermeros que trabajan en los mismos centros)
+  
   static async getColleagues(req: Request, res: Response): Promise<any> {
     try {
       const { userId } = req.params;
 
-      // Obtener centros del usuario
+      
       const userClinics = await prisma.userClinic.findMany({
         where: {
           userId,
@@ -426,7 +426,7 @@ export class UserClinicController {
 
       const clinicIds = userClinics.map(uc => uc.clinicId);
 
-      // Obtener otros usuarios que trabajan en los mismos centros
+      
       const colleagues = await prisma.user.findMany({
         where: {
           active: true,

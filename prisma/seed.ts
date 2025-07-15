@@ -250,7 +250,7 @@ const esquema = [
 async function main() {
   console.log('🚀 Iniciando seed completo...');
 
-  // Primero crear las vacunas
+  
   console.log('📋 Creando vacunas...');
   const vaccineIds: Record<string, string> = {};
 
@@ -285,7 +285,7 @@ async function main() {
         continue;
       }
 
-      // Verificar si ya existe este esquema
+      
       const esquemaExistente = await prisma.vaccineSchema.findFirst({
         where: {
           idVaccine: vaccineId,
@@ -311,7 +311,7 @@ async function main() {
     }
   }
 
-  // Crear centros médicos (clínicas)
+  
   console.log('🏥 Creando centros médicos...');
   const clinics = [
     {
@@ -408,7 +408,7 @@ async function main() {
     }
   }
 
-  // Obtener roles existentes
+  
   console.log('👥 Obteniendo roles...');
   const adminRole = await prisma.role.findFirst({ where: { name: 'Admin' } });
   const doctorRole = await prisma.role.findFirst({ where: { name: 'Doctor' } });
@@ -419,7 +419,7 @@ async function main() {
     return;
   }
 
-  // Crear usuarios
+  
   console.log('👤 Creando usuarios...');
   const securePassword = Bun.password.hashSync('password123');
   
@@ -574,7 +574,7 @@ async function main() {
     }
   }
 
-  // Crear niños
+  
   console.log('👶 Creando niños...');
   const children = [
     {
@@ -657,7 +657,7 @@ async function main() {
       });
       childIds.push(createdChild.idChild);
 
-      // Crear relación guardian-child
+      
       if (guardianId) {
         await prisma.guardianChild.create({
           data: {
@@ -675,7 +675,7 @@ async function main() {
     }
   }
 
-  // Crear citas médicas
+  
   console.log('📅 Creando citas médicas...');
   const appointments = [
     {

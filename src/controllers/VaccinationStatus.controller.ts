@@ -11,7 +11,7 @@ export class VaccinationStatusController {
 
       const edadMeses = differenceInMonths(new Date(), child.birthDate);
 
-      // Obtener esquema nacional
+      
       const esquema = await prisma.vaccineSchema.findMany({
         where: { active: true },
         include: { vaccine: true },

@@ -1,4 +1,4 @@
-import { checkUpcomingVaccines } from './src/jobs/vaccineNotifier';
+import { checkUpcomingVaccines } from '../src/jobs/vaccineNotifier';
 import 'dotenv/config';
 
 async function testRealVaccineNotifications() {

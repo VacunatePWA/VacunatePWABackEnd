@@ -16,6 +16,7 @@ import vaccinationStatusRouter from "./routes/vaccinationStatus.route";
 import userClinicRouter from "./routes/userClinic.route";
 import { initializeCronJobs } from './index.cron';
 import { sendEmail } from './utils/email.service';
+import { notifyOverdueVaccinesOnStartup } from './jobs/vaccineNotifier';
 
 const app = express();
 
@@ -91,6 +92,14 @@ const main = async () => {
         } catch (emailError) {
           console.error('Fallo al enviar el correo de prueba de inicio:', emailError);
         }
+      }
+
+      // ✅ Ejecutar notificación de vacunas vencidas al iniciar el servidor
+      try {
+        console.log('🚀 Iniciando verificación de vacunas vencidas...');
+        await notifyOverdueVaccinesOnStartup();
+      } catch (notificationError) {
+        console.error('❌ Error al ejecutar notificaciones de vacunas vencidas al startup:', notificationError);
       }
     });
   } catch (error) {

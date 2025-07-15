@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { sendEmail } from './src/utils/email.service.js';
+import { sendEmail } from '../src/utils/email.service.js';
 
 const prisma = new PrismaClient();
 
@@ -7,7 +7,7 @@ async function testEmailNotifications() {
   console.log('🧪 Iniciando test de notificaciones de vacunas...');
 
   try {
-    // Obtener todos los tutores con email
+    
     const tutors = await prisma.user.findMany({
       where: { 
         active: true,
@@ -113,7 +113,6 @@ async function testEmailNotifications() {
         
         console.log(`✅ Email enviado a ${tutor.firstName} ${tutor.lastName} (${tutor.email})`);
         
-        // Pequeña pausa entre envíos para no saturar el servidor
         await new Promise(resolve => setTimeout(resolve, 1000));
         
       } catch (error) {
@@ -142,7 +141,7 @@ async function testEmailNotifications() {
 
     // Enviar también el correo real del sistema para comparar
     console.log('\n🩹 Ejecutando también el sistema real de notificaciones...');
-    const { checkUpcomingVaccines } = await import('./src/jobs/vaccineNotifier.js');
+    const { checkUpcomingVaccines } = await import('../src/jobs/vaccineNotifier.js');
     await checkUpcomingVaccines();
 
   } catch (error) {

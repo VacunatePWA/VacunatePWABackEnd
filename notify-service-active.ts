@@ -6,7 +6,6 @@ async function notifyServiceActive() {
   console.log('📢 Enviando notificación de servicio activo a todos los tutores...\n');
 
   try {
-    // Obtener todos los tutores únicos con sus emails
     const tutors = await prisma.user.findMany({
       where: {
         active: true,
@@ -23,7 +22,7 @@ async function notifyServiceActive() {
         lastName: true,
         email: true
       },
-      distinct: ['email'] // Evitar duplicados por email
+      distinct: ['email']
     });
 
     console.log(`👥 Encontrados ${tutors.length} tutores con email válido\n`);
@@ -113,7 +112,6 @@ async function notifyServiceActive() {
         emailsSent++;
         console.log(`   ✅ Enviado exitosamente\n`);
 
-        // Pequeña pausa entre envíos para no saturar el servidor SMTP
         await new Promise(resolve => setTimeout(resolve, 1000));
 
       } catch (error) {

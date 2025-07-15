@@ -117,7 +117,6 @@ export class ChildController {
 
   static async getAvailableTutors(req: Request, res: Response): Promise<any> {
     try {
-      // Buscar usuarios con rol de tutor
       const tutorRole = await prisma.role.findFirst({
         where: { name: 'tutor', active: true }
       });
@@ -170,7 +169,6 @@ export class ChildController {
         return res.status(404).json({ message: "Usuario no encontrado" });
       }
 
-      // Buscar las relaciones tutor-hijo
       const guardianChildRelations = await prisma.guardianChild.findMany({
         where: {
           guardianId: user.idUser,
@@ -242,7 +240,7 @@ export class ChildController {
         orderBy: { createdAt: 'desc' }
       });
 
-      // Calcular la edad en meses
+      
       const birthDate = new Date(child.birthDate);
       const now = new Date();
       const ageInMonths = (now.getFullYear() - birthDate.getFullYear()) * 12 + 
@@ -427,7 +425,7 @@ export class ChildController {
         return res.status(404).json({ message: "Niño no encontrado o no autorizado" });
       }
 
-      // Calcular edad en meses
+      
       const now = new Date();
       const birthDate = new Date(child.birthDate);
       const ageInMonths = (now.getFullYear() - birthDate.getFullYear()) * 12 + 
@@ -443,7 +441,7 @@ export class ChildController {
         }
       });
 
-      // Obtener vacunas aplicadas
+      
       const appliedVaccines = await prisma.record.findMany({
         where: {
           childId: childId,
@@ -493,7 +491,7 @@ export class ChildController {
 
   static async createChildWithTutor(req: Request, res: Response): Promise<any> {
     try {
-      const { child, users, relations, tutorId, vaccineRecords } = req.body;
+      const { child, users, relationships, tutorId, vaccineRecords } = req.body;
 
       const existingChild = await prisma.child.findFirst({
         where: { 
@@ -516,81 +514,61 @@ export class ChildController {
           }
         });
 
-        let tutorUser;
-
-        if (tutorId) {
-          // Usar tutor existente
-          tutorUser = await tx.user.findUnique({
-            where: { idUser: tutorId }
+        
+        if (!relationships || relationships.length === 0) {
+          return res.status(400).json({ 
+            message: "Debe proporcionar al menos una relación de tutor para el niño." 
           });
+        }
 
-          if (!tutorUser) {
-            throw new Error("Tutor especificado no encontrado");
-          }
+        let responsibleUser;
 
-          const existingRelation = await tx.guardianChild.findFirst({
-            where: {
-              guardianId: tutorUser.idUser,
-              childId: newChild.idChild
-            }
-          });
-
-          if (existingRelation) {
-            await tx.guardianChild.update({
-              where: { idGuardianChild: existingRelation.idGuardianChild },
-              data: {
-                relationship: "TUTOR",
-                active: true
-              }
-            });
-          } else {
-            await tx.guardianChild.create({
-              data: {
-                guardianId: tutorUser.idUser,
-                childId: newChild.idChild,
-                relationship: "TUTOR",
-                active: true
-              }
-            });
-          }
-        } else if (users && users.length > 0) {
-          // Crear nuevo tutor
-          const userData = users[0];
-          
-          // Verificar si el usuario ya existe
-          const existingUser = await tx.user.findFirst({
+        
+        for (const relation of relationships) {
+          let tutor = await tx.user.findFirst({
             where: { 
-              identification: userData.identification,
+              identification: relation.identificationUser, 
               active: true 
             }
           });
 
-          if (existingUser) {
-            // Reutilizar el tutor existente en lugar de crear uno nuevo
-            tutorUser = existingUser;
-          } else {
-            // Obtener el rol de tutor
-            const tutorRole = await tx.role.findFirst({
-              where: { name: "TUTOR" }
-            });
+          
+          if (!tutor && users && users.length > 0) {
+            const userData = users.find((u: any) => u.identification === relation.identificationUser);
+            if (userData) {
+              
+              const tutorRole = await tx.role.findFirst({
+                where: { name: "TUTOR" }
+              });
 
-            if (!tutorRole) {
-              throw new Error("Rol de tutor no encontrado");
-            }
-
-            // Crear el nuevo usuario/tutor
-            tutorUser = await tx.user.create({
-              data: {
-                ...userData,
-                roleId: tutorRole.idRole,
-                active: true
+              if (!tutorRole) {
+                throw new Error("Rol de tutor no encontrado");
               }
-            });
+
+              
+              tutor = await tx.user.create({
+                data: {
+                  ...userData,
+                  roleId: tutorRole.idRole,
+                  active: true
+                }
+              });
+            }
+          }
+
+          if (!tutor) {
+            console.warn(`Tutor con identificación ${relation.identificationUser} no encontrado o no se pudieron crear`);
+            continue;
+          }
+
+          
+          if (!responsibleUser) {
+            responsibleUser = tutor;
           }
 
           const existingRelation = await tx.guardianChild.findFirst({
             where: {
-              guardianId: tutorUser.idUser,
+              guardianId: tutor.idUser,
               childId: newChild.idChild
             }
           });
@@ -599,25 +577,28 @@ export class ChildController {
             await tx.guardianChild.update({
               where: { idGuardianChild: existingRelation.idGuardianChild },
               data: {
-                relationship: "TUTOR",
+                relationship: relation.relationship,
                 active: true
               }
             });
           } else {
             await tx.guardianChild.create({
               data: {
-                guardianId: tutorUser.idUser,
+                guardianId: tutor.idUser,
                 childId: newChild.idChild,
-                relationship: "TUTOR",
+                relationship: relation.relationship,
                 active: true
               }
             });
           }
-        } else {
-          throw new Error("Debe especificar un tutor existente o datos para crear uno nuevo");
         }
 
-        // Crear registros de vacunas si se proporcionaron
+        
+        if (!responsibleUser) {
+          throw new Error("No se pudo establecer un tutor responsable para el niño");
+        }
+
+        
         if (vaccineRecords && vaccineRecords.length > 0) {
           for (const record of vaccineRecords) {
             const vaccine = await tx.vaccine.findFirst({
@@ -632,7 +613,7 @@ export class ChildController {
                   dosesApplied: record.dosesApplied,
                   notes: record.notes || "",
                   dateApplied: new Date(),
-                  userId: tutorUser.idUser,
+                  userId: responsibleUser.idUser,
                   active: true
                 }
               });
@@ -645,10 +626,10 @@ export class ChildController {
           data: { 
             child: newChild, 
             tutor: {
-              idUser: tutorUser.idUser,
-              firstName: tutorUser.firstName,
-              lastName: tutorUser.lastName,
-              email: tutorUser.email
+              idUser: responsibleUser.idUser,
+              firstName: responsibleUser.firstName,
+              lastName: responsibleUser.lastName,
+              email: responsibleUser.email
             }
           }
         });
@@ -690,59 +671,68 @@ export class ChildController {
           }
         });
 
-        // Primero desactivar todas las relaciones anteriores
+        
+        if (!relationships || relationships.length === 0) {
+          return res.status(400).json({ 
+            message: "Debe proporcionar al menos una relación de tutor para el niño." 
+          });
+        }
+
+        
+        const identificationChild = child.identification;
+        const tutorIdentifications = relationships.map(r => r.identificationUser);
         await tx.guardianChild.updateMany({
           where: {
-            childId: existingChild.idChild,
+            child: { identification: identificationChild },
+            guardian: { identification: { in: tutorIdentifications } },
             active: true
           },
           data: { active: false }
         });
 
-        // Procesar relaciones si se proporcionaron
-        if (relationships && relationships.length > 0) {
-          for (const relation of relationships) {
-            const tutor = await tx.user.findFirst({
-              where: { 
-                identification: relation.identificationUser, 
-                active: true 
+        
+        for (const relation of relationships) {
+          const tutor = await tx.user.findFirst({
+            where: { 
+              identification: relation.identificationUser, 
+              active: true 
+            }
+          });
+
+          if (!tutor) {
+            console.warn(`Tutor con identificación ${relation.identificationUser} no encontrado o inactivo`);
+            continue;
+          }
+
+          const existingRelation = await tx.guardianChild.findFirst({
+            where: {
+              guardianId: tutor.idUser,
+              childId: existingChild.idChild
+            }
+          });
+
+          if (existingRelation) {
+            await tx.guardianChild.update({
+              where: { idGuardianChild: existingRelation.idGuardianChild },
+              data: {
+                relationship: relation.relationship,
+                active: true
               }
             });
-
-            if (!tutor) {
-              continue;
-            }
-
-            const existingRelation = await tx.guardianChild.findFirst({
-              where: {
+          } else {
+            await tx.guardianChild.create({
+              data: {
                 guardianId: tutor.idUser,
-                childId: existingChild.idChild
+                childId: existingChild.idChild,
+                relationship: relation.relationship,
+                active: true
               }
             });
-
-            if (existingRelation) {
-              await tx.guardianChild.update({
-                where: { idGuardianChild: existingRelation.idGuardianChild },
-                data: {
-                  relationship: relation.relationship,
-                  active: true
-                }
-              });
-            } else {
-              await tx.guardianChild.create({
-                data: {
-                  guardianId: tutor.idUser,
-                  childId: existingChild.idChild,
-                  relationship: relation.relationship,
-                  active: true
-                }
-              });
-            }
           }
         }
 
         if (vaccineRecords && vaccineRecords.length > 0) {
-          // Obtener el primer tutor activo para asignar las vacunas
+          
           const firstActiveRelation = await tx.guardianChild.findFirst({
             where: { childId: existingChild.idChild, active: true },
             include: { guardian: true }
@@ -752,7 +742,7 @@ export class ChildController {
           if (firstActiveRelation?.guardian) {
             responsibleUser = firstActiveRelation.guardian;
           } else {
-            // Si no hay tutor, usar el usuario logueado
+            
             const loggedInUser = await tx.user.findUnique({ 
               where: { idUser: (req as any).user?.idUser } 
             });
@@ -771,7 +761,7 @@ export class ChildController {
           const allVaccines = await tx.vaccine.findMany();
           const vaccineMap = new Map(allVaccines.map(v => [v.name, v.idVaccine]));
 
-          // Desactivar registros que ya no vienen en el payload
+          
           for (const dbRecord of existingDbRecords) {
             if (dbRecord.active && !incomingVaccineNames.has(dbRecord.vaccine.name)) {
               await tx.record.update({
@@ -781,7 +771,7 @@ export class ChildController {
             }
           }
 
-          // Actualizar, reactivar o crear nuevos registros
+          
           for (const incomingRecord of vaccineRecords) {
             const vaccineId = vaccineMap.get(incomingRecord.vaccineName);
             if (!vaccineId) {
@@ -801,7 +791,7 @@ export class ChildController {
                 }
               });
             } else {
-              // Si no existe, crear uno nuevo
+              
               await tx.record.create({
                 data: {
                   childId: existingChild.idChild,
@@ -817,7 +807,7 @@ export class ChildController {
           }
         }
 
-        // Obtener datos actualizados para la respuesta
+        
         const activeTutors = await tx.guardianChild.findMany({
           where: {
             childId: existingChild.idChild,
@@ -835,7 +825,7 @@ export class ChildController {
           }
         });
 
-        // Obtener vacunas activas
+        
         const activeVaccines = await tx.record.findMany({
           where: {
             childId: existingChild.idChild,

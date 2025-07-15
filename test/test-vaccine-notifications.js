@@ -1,5 +1,5 @@
-import prisma from './src/db/prisma';
-import { sendEmail } from './src/utils/email.service';
+import prisma from '../src/db/prisma';
+import { sendEmail } from '../src/utils/email.service';
 import { differenceInMonths, addDays, differenceInDays } from 'date-fns';
 import 'dotenv/config';
 
@@ -57,11 +57,11 @@ async function testVaccineNotifications() {
 
     let notificationsSent = 0;
 
-    // Para cada niño, simular que necesita la primera vacuna que no tiene aplicada
+    
     for (const child of children) {
       const appliedVaccineIds = new Set(child.records.map(r => r.vaccineId));
       
-      // Buscar la primera vacuna que no tiene aplicada
+      
       const nextVaccine = vaccineSchemas.find(schema => 
         !appliedVaccineIds.has(schema.vaccine.idVaccine)
       );

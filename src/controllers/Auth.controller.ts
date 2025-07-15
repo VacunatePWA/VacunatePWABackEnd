@@ -279,10 +279,10 @@ static async deleteUser(req: Request, res: Response): Promise<any> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      // Extraer datos del usuario sin password y userClinics
+      
       const { password, userClinics, ...userProfile } = user;
       
-      // Extraer solo los centros del array de userClinics
+      
       const assignedClinics = userClinics?.map((uc: any) => uc.clinic) || [];
       
       return res.status(200).json({ 

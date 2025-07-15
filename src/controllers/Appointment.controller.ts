@@ -63,7 +63,7 @@ export class AppointmentController {
         return res.status(404).json({ message: "Clinic not found" });
       }
 
-      // Validar que no exista una cita activa igual
+      
       const exists = await prisma.appointment.findFirst({
         where: {
           childId: child.idChild,
@@ -116,7 +116,7 @@ export class AppointmentController {
         return res.status(400).json({ message: "idAppointment is required" });
       }
 
-      // Validar formato UUID si es necesario
+      
       if (typeof idAppointment !== 'string') {
         return res.status(400).json({ message: "idAppointment must be a string" });
       }
@@ -142,7 +142,7 @@ export class AppointmentController {
         newClinicId = clinicId;
       }
 
-      // Validar y obtener nuevo paciente si se proporciona
+      
       let newChildId = appointment.childId;
       if (identificationChild) {
         console.log('🔍 Looking for child with identification:', identificationChild);
@@ -156,7 +156,7 @@ export class AppointmentController {
         newChildId = child.idChild;
       }
 
-      // Validar y obtener nuevo usuario si se proporciona
+      
       let newUserId = appointment.userId;
       if (identificationUser) {
         console.log('🔍 Looking for user with identification:', identificationUser);
@@ -170,7 +170,7 @@ export class AppointmentController {
         newUserId = user.idUser;
       }
 
-      // Validar que no exista una cita duplicada con los nuevos datos
+      
       if (identificationChild || identificationUser || clinicId || date) {
         const duplicateCheck = await prisma.appointment.findFirst({
           where: {

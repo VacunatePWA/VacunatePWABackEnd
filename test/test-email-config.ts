@@ -1,10 +1,10 @@
-import { sendEmail } from './src/utils/email.service';
+import { sendEmail } from '../src/utils/email.service';
 import 'dotenv/config';
 
 async function testEmailConfiguration() {
   console.log('🧪 Probando configuración del sistema de correo...\n');
 
-  // Mostrar variables de entorno (sin mostrar credenciales)
+  
   console.log('📧 Configuración actual:');
   console.log(`  HOST: ${process.env.EMAIL_HOST || 'NO CONFIGURADO'}`);
   console.log(`  PORT: ${process.env.EMAIL_PORT || 'NO CONFIGURADO'}`);
@@ -12,7 +12,7 @@ async function testEmailConfiguration() {
   console.log(`  PASS: ${process.env.EMAIL_PASS ? '***configurado***' : 'NO CONFIGURADO'}`);
   console.log(`  FROM: ${process.env.FROM_EMAIL || process.env.EMAIL_FROM || 'NO CONFIGURADO'}\n`);
 
-  // Verificar si todas las variables están configuradas
+  
   const requiredVars = ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASS'];
   const missingVars = requiredVars.filter(varName => !process.env[varName]);
 

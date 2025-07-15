@@ -1,12 +1,12 @@
-import prisma from './src/db/prisma';
-import { sendEmail } from './src/utils/email.service';
+import prisma from '../src/db/prisma';
+import { sendEmail } from '../src/utils/email.service';
 import 'dotenv/config';
 
 async function testVaccineNotifications() {
   console.log('🧪 Probando sistema de notificaciones de vacunas...\n');
 
   try {
-    // Obtener todos los tutores con sus niños
+    
     const tutorsWithChildren = await prisma.guardianChild.findMany({
       where: { active: true },
       include: {
@@ -31,7 +31,7 @@ async function testVaccineNotifications() {
 
     console.log(`👥 Encontrados ${tutorsWithChildren.length} relaciones tutor-niño activas\n`);
 
-    // Obtener una vacuna de ejemplo para el test
+    
     const testVaccine = await prisma.vaccine.findFirst({
       where: { active: true }
     });
